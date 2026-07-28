@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Informatic News — Admin Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060a0e;--sf:#0d1117;--sf2:#161b22;--sf3:#1c2230;--sf4:#21283a;
+  --bd:#2d3748;--bd2:#3d4f6e;
+  --ac:#00d4aa;--ac2:#4a9eff;--ac3:#ff6b6b;--ac4:#ffd166;--ac5:#a78bfa;
+  --tx:#e2e8f0;--tx2:#94a3b8;--tx3:#4a5568;
+  --gr:#10b981;--rd:#ef4444;--or:#f59e0b;
+  --grad1:linear-gradient(135deg,#00d4aa22,#00d4aa05);
+  --grad2:linear-gradient(135deg,#4a9eff22,#4a9eff05);
+  --grad3:linear-gradient(135deg,#ffd16622,#ffd16605);
+  --grad4:linear-gradient(135deg,#a78bfa22,#a78bfa05);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;display:flex;flex-direction:column;}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--sf);}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px;}
+
+/* HEADER */
+.header{background:var(--sf);border-bottom:1px solid var(--bd);padding:0 24px;height:56px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px);}
+.logo{font-family:'Instrument Serif',serif;font-size:20px;background:linear-gradient(135deg,var(--ac),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.5px;}
+.logo sup{font-size:10px;font-family:'DM Sans',sans-serif;-webkit-text-fill-color:var(--tx2);letter-spacing:1px;text-transform:uppercase;vertical-align:super;}
+.hnav{display:flex;gap:2px;margin-left:12px;}
+.hn{padding:6px 12px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx2);transition:all .15s;border:none;background:transparent;font-family:'DM Sans',sans-serif;}
+.hn:hover{color:var(--tx);background:var(--sf2);}
+.hn.active{color:var(--ac);background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.15);}
+.hright{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.hstat{font-size:12px;color:var(--tx2);}
+.hstat strong{color:var(--ac);font-family:'IBM Plex Mono',monospace;}
+.h-badge{background:var(--sf2);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--tx2);}
+
+/* LAYOUT */
+.layout{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:200px;background:var(--sf);border-right:1px solid var(--bd);padding:12px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex-shrink:0;}
+.sb-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);padding:8px 8px 3px;margin-top:6px;}
+.sb-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;color:var(--tx2);font-size:12px;font-weight:500;transition:all .15s;border:1px solid transparent;}
+.sb-item:hover{color:var(--tx);background:var(--sf2);}
+.sb-item.active{color:var(--ac);background:rgba(0,212,170,.08);border-color:rgba(0,212,170,.12);}
+.sb-badge{margin-left:auto;background:var(--sf3);border-radius:10px;padding:1px 6px;font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--tx2);}
+.sb-item.active .sb-badge{background:rgba(0,212,170,.15);color:var(--ac);}
+.content{flex:1;overflow-y:auto;padding:20px;}
+.page{display:none;}.page.active{display:block;}
+
+/* SECTION TITLE */
+.sec-title{font-family:'Instrument Serif',serif;font-size:22px;color:var(--tx);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.sec-sub{font-size:12px;font-family:'DM Sans',sans-serif;color:var(--tx2);font-weight:400;}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:18px;position:relative;overflow:hidden;cursor:default;transition:transform .2s,border-color .2s;}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--bd2);}
+.sc-glow{position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;opacity:.15;filter:blur(20px);}
+.sc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:16px;}
+.sc-label{font-size:11px;color:var(--tx2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.8px;}
+.sc-value{font-size:32px;font-weight:700;font-family:'IBM Plex Mono',monospace;line-height:1;}
+.sc-trend{font-size:11px;color:var(--tx3);margin-top:6px;}
+
+/* CHART CONTAINERS */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px;}
+.chart-box{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:18px;}
+.chart-box.full{grid-column:1/-1;}
+.chart-title{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:4px;}
+.chart-sub{font-size:11px;color:var(--tx2);margin-bottom:14px;}
+.chart-wrap{position:relative;}
+
+/* MINI STATS ROW */
+.mini-stats{display:flex;gap:10px;margin-bottom:14px;}
+.mini-stat{flex:1;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.mini-stat-icon{font-size:20px;}
+.mini-stat-label{font-size:11px;color:var(--tx2);}
+.mini-stat-val{font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace;}
+
+/* TABLE */
+.table-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.tw-head{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--sf2);}
+.tw-title{font-weight:600;font-size:13px;}
+.badge-num{background:var(--sf3);border:1px solid var(--bd);border-radius:20px;padding:2px 8px;font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--ac);}
+table{width:100%;border-collapse:collapse;}
+thead th{text-align:left;padding:9px 16px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);font-weight:600;border-bottom:1px solid var(--bd);background:var(--sf2);}
+tbody tr{border-bottom:1px solid var(--bd);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--sf2);}
+td{padding:10px 16px;font-size:13px;vertical-align:middle;}
+.td-mono{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--tx2);}
+.td-title a{color:var(--tx);text-decoration:none;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;}
+.td-title a:hover{color:var(--ac);}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;white-space:nowrap;}
+.pill-gr{background:rgba(16,185,129,.1);color:var(--gr);border:1px solid rgba(16,185,129,.2);}
+.pill-rd{background:rgba(239,68,68,.1);color:var(--rd);border:1px solid rgba(239,68,68,.2);}
+.pill-or{background:rgba(245,158,11,.1);color:var(--or);border:1px solid rgba(245,158,11,.2);}
+.pill-bl{background:rgba(74,158,255,.1);color:var(--ac2);border:1px solid rgba(74,158,255,.2);}
+
+/* BUTTONS */
+.btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-p{background:linear-gradient(135deg,var(--ac),#00b894);color:#000;}
+.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(0,212,170,.3);}
+.btn-p:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn-g{background:transparent;color:var(--tx);border:1px solid var(--bd);}
+.btn-g:hover{border-color:var(--bd2);background:var(--sf2);}
+.btn-d{background:transparent;color:var(--rd);border:1px solid rgba(239,68,68,.3);}
+.btn-d:hover{background:rgba(239,68,68,.08);}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
+
+/* INPUTS */
+.input,.textarea,.sel{background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--tx);outline:none;width:100%;transition:border-color .2s;}
+.input:focus,.textarea:focus,.sel:focus{border-color:var(--ac);}
+.input::placeholder{color:var(--tx3);}
+.textarea{min-height:75px;resize:vertical;}
+.field-group{margin-bottom:12px;}
+.field-label{font-size:12px;color:var(--tx2);margin-bottom:4px;display:block;}
+
+/* PROGRESS */
+.prog-area{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px;display:none;}
+.prog-area.vis{display:block;}
+.prog-item{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;}
+.pd{width:8px;height:8px;border-radius:50%;background:var(--bd);flex-shrink:0;}
+.pd.crawling{background:var(--ac);animation:pulse 1s infinite;}
+.pd.done{background:var(--gr);}
+.art-bar-wrap{background:var(--sf2);border-radius:3px;height:3px;margin-top:6px;overflow:hidden;}
+.art-bar-fill{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));transition:width .3s;border-radius:3px;}
+
+/* SCHEDULER */
+.toggle-wrap{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bd);}
+.toggle-title{font-weight:600;font-size:13px;}
+.toggle-desc{font-size:11px;color:var(--tx2);margin-top:2px;}
+label.sw{position:relative;width:40px;height:22px;cursor:pointer;flex-shrink:0;}
+label.sw input{opacity:0;position:absolute;inset:0;cursor:pointer;margin:0;}
+.sw-track{position:absolute;inset:0;background:var(--sf3);border-radius:11px;transition:background .2s;border:1px solid var(--bd);}
+.sw-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none;}
+.preset-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;}
+.preset-btn{font-size:11px;padding:4px 8px;border-radius:5px;border:1px solid var(--bd);background:transparent;cursor:pointer;color:var(--tx2);font-family:'DM Sans',sans-serif;transition:all .15s;}
+.preset-btn:hover{border-color:var(--ac);color:var(--ac);}
+.countdown{font-size:28px;font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--ac);}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.modal-bg.vis{display:flex;}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:14px;width:min(560px,95vw);max-height:85vh;overflow-y:auto;padding:22px;position:relative;}
+.modal-close{position:absolute;top:12px;right:12px;background:var(--sf2);border:1px solid var(--bd);border-radius:6px;color:var(--tx2);cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.modal-close:hover{color:var(--tx);}
+.modal-title{font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:14px;}
+
+/* BUBBLE CHART */
+.bubble-wrap{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-end;justify-content:center;padding:6px 0;min-height:120px;}
+.bubble{border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s;position:relative;flex-shrink:0;}
+.bubble:hover{transform:scale(1.1);z-index:10;}
+.bubble:hover .btt{display:block;}
+.btt{display:none;position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;font-size:11px;white-space:nowrap;z-index:50;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.btt strong{display:block;color:var(--tx);margin-bottom:2px;max-width:180px;overflow:hidden;text-overflow:ellipsis;}
+.bubble-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.9);text-align:center;padding:3px;line-height:1.2;overflow:hidden;max-width:90%;}
+
+/* IC BAR */
+.ic-bar-wrap{flex:1;background:var(--sf3);border-radius:3px;height:5px;overflow:hidden;}
+.ic-bar-fill{height:100%;background:var(--ac);border-radius:3px;transition:width .3s;}
+
+/* STATUSBAR */
+.statusbar{position:fixed;bottom:18px;right:18px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;font-size:12px;display:none;align-items:center;gap:7px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:200;}
+.statusbar.vis{display:flex;}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--ac);animation:pulse 1s infinite;}
+
+/* LIVE TICKER */
+.ticker{display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(0,212,170,.05);border:1px solid rgba(0,212,170,.1);border-radius:8px;font-size:12px;color:var(--tx2);margin-bottom:14px;}
+.ticker-dot{width:6px;height:6px;border-radius:50%;background:var(--ac);animation:pulse 1.5s infinite;flex-shrink:0;}
+
+/* CF GAUGE */
+.gauge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.gauge-box{background:var(--sf2);border-radius:10px;padding:14px;text-align:center;}
+.gauge-val{font-size:26px;font-family:'IBM Plex Mono',monospace;font-weight:700;margin:6px 0;}
+.gauge-label{font-size:10px;color:var(--tx2);text-transform:uppercase;letter-spacing:.8px;}
+.gauge-bar-wrap{height:4px;background:var(--sf3);border-radius:2px;margin-top:8px;overflow:hidden;}
+.gauge-bar-fill{height:100%;border-radius:2px;transition:width .8s ease;}
+
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page.active{animation:fadeIn .2s ease;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Informatic News <sup>Admin</sup></div>
+  <div class="hnav">
+    <button class="hn active" onclick="switchPage('dashboard',this)">Dashboard</button>
+    <button class="hn" onclick="switchPage('crawl',this)">Crawling</button>
+    <button class="hn" onclick="switchPage('portals',this)">Portal</button>
+    <button class="hn" onclick="switchPage('articles',this)">Artikel</button>
+    <button class="hn" onclick="switchPage('interactions',this)">Log Klik</button>
+    <button class="hn" onclick="switchPage('cf',this)">CF Model</button>
+    <button class="hn" onclick="switchPage('scheduler',this)">Scheduler</button>
+  </div>
+  <div class="hright">
+    <span class="hstat">Artikel: <strong id="h-total">-</strong></span>
+    <span class="hstat">Portal: <strong id="h-portals">-</strong></span>
+    <span id="h-username" style="font-size:12px;color:var(--ac)"></span>
+    <button class="btn btn-g btn-sm" onclick="openChangePassword()">🔑 Ganti Password</button>
+    <button class="btn btn-g btn-sm" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<div class="layout">
+<div class="sidebar">
+  <div class="sb-label">Monitor</div>
+  <div class="sb-item active" onclick="switchPage('dashboard',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard <div class="sb-badge" id="sb-total">0</div>
+  </div>
+  <div class="sb-item" onclick="switchPage('articles',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Artikel <div class="sb-badge" id="sb-art">0</div>
+  </div>
+  <div class="sb-item" onclick="switchPage('interactions',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    Log Klik <div class="sb-badge" id="sb-interact">0</div>
+  </div>
+  <div class="sb-label">Manajemen</div>
+  <div class="sb-item" onclick="switchPage('portals',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    Portal <div class="sb-badge" id="sb-portal">0</div>
+  </div>
+  <div class="sb-item" onclick="switchPage('crawl',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>
+    Crawling
+  </div>
+  <div class="sb-item" onclick="switchPage('scheduler',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Scheduler
+  </div>
+  <div class="sb-label">AI</div>
+  <div class="sb-item" onclick="switchPage('cf',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+    CF Model <div class="sb-badge" id="sb-cf">-</div>
+  </div>
+  <div class="sb-label">Sistem</div>
+  <div class="sb-item" onclick="switchPage('logs',this)">
+    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Log Crawling
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ══ DASHBOARD ══ -->
+<div id="page-dashboard" class="page active">
+  <div class="sec-title">Dashboard <span class="sec-sub">Ringkasan sistem secara real-time</span></div>
+
+  <!-- Stat Cards -->
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="sc-glow" style="background:var(--ac)"></div>
+      <div class="sc-icon" style="background:rgba(0,212,170,.1)">📰</div>
+      <div class="sc-label">Total Artikel</div>
+      <div class="sc-value" id="stat-articles" style="color:var(--ac)">0</div>
+      <div class="sc-trend">tersimpan di database</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-glow" style="background:var(--ac2)"></div>
+      <div class="sc-icon" style="background:rgba(74,158,255,.1)">🌐</div>
+      <div class="sc-label">Portal Aktif</div>
+      <div class="sc-value" id="stat-portals" style="color:var(--ac2)">0</div>
+      <div class="sc-trend">sumber berita</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-glow" style="background:var(--ac4)"></div>
+      <div class="sc-icon" style="background:rgba(255,209,102,.1)">👆</div>
+      <div class="sc-label">Total Klik</div>
+      <div class="sc-value" id="stat-clicks" style="color:var(--ac4)">0</div>
+      <div class="sc-trend">interaksi pengguna</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-glow" style="background:var(--ac5)"></div>
+      <div class="sc-icon" style="background:rgba(167,139,250,.1)">👤</div>
+      <div class="sc-label">Unique User</div>
+      <div class="sc-value" id="stat-users" style="color:var(--ac5)">0</div>
+      <div class="sc-trend">pseudonim anonim</div>
+    </div>
+  </div>
+
+  <!-- Charts row 1 -->
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-title">Distribusi Artikel per Sumber</div>
+      <div class="chart-sub">Jumlah artikel dari tiap portal berita</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="chart-source"></canvas>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Distribusi Artikel per Kategori</div>
+      <div class="chart-sub">Sebaran topik berita yang dikumpulkan</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="chart-kategori"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts row 2 -->
+  <div class="chart-grid">
+    <div class="chart-box">
+      <div class="chart-title">🫧 Portal Paling Banyak Diklik</div>
+      <div class="chart-sub">Ukuran bubble = jumlah klik</div>
+      <div id="bubble-portal" style="min-height:140px;display:flex;align-items:center;justify-content:center">
+        <span style="color:var(--tx3);font-size:12px">Memuat...</span>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Klik per Kategori</div>
+      <div class="chart-sub">Minat pengguna berdasarkan topik</div>
+      <div class="chart-wrap" style="height:180px">
+        <canvas id="chart-click-kat"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top artikel diklik bubble -->
+  <div class="chart-box" style="margin-bottom:14px">
+    <div class="chart-title">🫧 Artikel Paling Banyak Diklik</div>
+    <div class="chart-sub">Top 20 artikel berdasarkan jumlah klik — klik bubble untuk detail</div>
+    <div id="bubble-article" style="min-height:140px;display:flex;align-items:center;justify-content:center">
+      <span style="color:var(--tx3);font-size:12px">Memuat...</span>
+    </div>
+  </div>
+
+  <!-- Log crawling recent -->
+  <div class="chart-box">
+    <div class="chart-title">Log Crawling Terbaru</div>
+    <div class="chart-sub">10 sesi crawling terakhir</div>
+    <table style="margin-top:8px">
+      <thead><tr><th>Portal</th><th>Waktu</th><th>Artikel Baru</th><th>Duplikat</th><th>Status</th></tr></thead>
+      <tbody id="dash-logs"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══ CRAWLING ══ -->
+<div id="page-crawl" class="page">
+  <div class="sec-title">Crawling Manual</div>
+  <div style="background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px">
+    <div class="field-group"><div class="field-label">Pilih Portal</div>
+      <div id="portal-checks" style="display:flex;flex-wrap:wrap;gap:7px"></div></div>
+    <div class="field-group"><div class="field-label">Filter Kategori</div>
+      <select class="sel" id="crawl-kat" style="width:auto;min-width:170px"></select></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-p" id="btn-crawl" onclick="startCrawl()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>Mulai Crawling
+      </button>
+      <button class="btn btn-g btn-sm" onclick="window.open('/api/download/csv','_blank')">↓ Export CSV</button>
+      <div id="crawl-time" style="font-size:12px;color:var(--tx2)"></div>
+    </div>
+  </div>
+  <div class="prog-area" id="prog-area">
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin-bottom:8px">Progress</div>
+    <div id="prog-items"></div>
+    <div id="art-prog" style="display:none;margin-top:10px;padding:9px;background:var(--sf2);border-radius:8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--tx2)">
+        <span>Mengambil isi artikel...</span><span id="art-count" style="font-family:'IBM Plex Mono',monospace"></span>
+      </div>
+      <div class="art-bar-wrap"><div class="art-bar-fill" id="art-bar" style="width:0%"></div></div>
+      <div id="art-title" style="font-size:11px;color:var(--tx3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <div class="tw-head">
+      <div class="tw-title">Hasil Terbaru</div><div class="badge-num" id="result-count">0</div>
+      <div style="margin-left:auto;display:flex;gap:7px">
+        <input class="input" id="art-search" placeholder="Cari judul..." oninput="loadArticles()" style="width:180px">
+        <select class="sel" id="art-src-filter" onchange="loadArticles()" style="width:auto"></select>
+        <select class="sel" id="art-kat-filter" onchange="loadArticles()" style="width:auto"></select>
+      </div>
+    </div>
+    <table><thead><tr><th>#</th><th>Judul</th><th>Sumber</th><th>Kategori</th><th>Hash</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+    <tbody id="art-tbody"></tbody></table>
+    <div style="padding:10px 16px;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--tx2)">
+      <span id="pgn-info"></span><div id="pgn-btns" style="display:flex;gap:4px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PORTAL ══ -->
+<div id="page-portals" class="page">
+  <div class="sec-title">Manajemen Portal</div>
+  <div style="margin-bottom:14px;padding:12px 14px;background:rgba(0,212,170,.05);border:1px solid rgba(0,212,170,.1);border-radius:10px;font-size:13px;color:var(--tx2)">
+    <span style="color:var(--ac);font-weight:600">15 portal</span> dikonfigurasi dengan metode hybrid (RSS + Newspaper3k + BeautifulSoup). Klik <strong>Nonaktifkan</strong> untuk melewati portal tertentu.
+  </div>
+  <div class="table-wrap">
+    <table><thead><tr><th>No</th><th>Nama</th><th>Domain</th><th>Metode</th><th>RSS</th><th>HTML</th><th>Status</th><th>Aksi</th></tr></thead>
+    <tbody id="portal-tbody"></tbody></table>
+  </div>
+</div>
+
+<!-- ══ ARTIKEL ══ -->
+<div id="page-articles" class="page">
+  <div class="sec-title">Daftar Artikel <span class="sec-sub">Semua artikel tersimpan</span></div>
+  <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
+    <input class="input" id="art2-search" placeholder="Cari judul..." oninput="loadArticles2()" style="width:200px">
+    <select class="sel" id="art2-src" onchange="loadArticles2()" style="width:auto"></select>
+    <select class="sel" id="art2-kat" onchange="loadArticles2()" style="width:auto"></select>
+  </div>
+  <div class="table-wrap">
+    <div class="tw-head"><div class="tw-title">Artikel</div><div class="badge-num" id="art2-count">0</div></div>
+    <table><thead><tr><th>#</th><th>Judul</th><th>Sumber</th><th>Kategori</th><th>URL Hash</th><th>SimHash</th><th>Tanggal Parse</th><th>Aksi</th></tr></thead>
+    <tbody id="art2-tbody"></tbody></table>
+    <div style="padding:10px 16px;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--tx2)">
+      <span id="art2-pgn-info"></span><div id="art2-pgn-btns" style="display:flex;gap:4px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOG KLIK ══ -->
+<div id="page-interactions" class="page">
+  <div class="sec-title">Log Klik User <span class="sec-sub">Implicit feedback untuk CF</span></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="sc-glow" style="background:var(--ac)"></div><div class="sc-icon" style="background:rgba(0,212,170,.1)">👆</div><div class="sc-label">Total Interaksi</div><div class="sc-value" id="ic-total" style="color:var(--ac)">0</div></div>
+    <div class="stat-card"><div class="sc-glow" style="background:var(--ac2)"></div><div class="sc-icon" style="background:rgba(74,158,255,.1)">👥</div><div class="sc-label">Unique User</div><div class="sc-value" id="ic-users" style="color:var(--ac2)">0</div></div>
+    <div class="stat-card"><div class="sc-glow" style="background:var(--ac4)"></div><div class="sc-icon" style="background:rgba(255,209,102,.1)">📰</div><div class="sc-label">Artikel Diklik</div><div class="sc-value" id="ic-arts" style="color:var(--ac4)">0</div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="table-wrap">
+      <div class="tw-head"><div class="tw-title">Top 10 Artikel Terpopuler</div></div>
+      <table><thead><tr><th>No</th><th>Judul</th><th>Sumber</th><th>Klik</th></tr></thead>
+      <tbody id="ic-top-arts"></tbody></table>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Klik per Kategori</div>
+      <div class="chart-sub">Distribusi minat pengguna</div>
+      <div class="chart-wrap" style="height:200px"><canvas id="chart-ic-kat"></canvas></div>
+    </div>
+  </div>
+  <div class="table-wrap" style="margin-bottom:14px">
+    <div class="tw-head">
+      <div class="tw-title">Log Detail</div><div class="badge-num" id="ic-log-count">0</div>
+      <div style="margin-left:auto;display:flex;gap:7px">
+        <input class="input" id="ic-filter-user" placeholder="Filter user..." oninput="loadInteractions()" style="width:160px">
+        <select class="sel" id="ic-filter-event" onchange="loadInteractions()">
+          <option value="">Semua Event</option>
+          <option value="click">click</option>
+          <option value="read">read</option>
+          <option value="share">share</option>
+        </select>
+        <button class="btn btn-g btn-sm" onclick="window.open('/api/interactions/export','_blank')">↓ CSV</button>
+      </div>
+    </div>
+    <table><thead><tr><th>#</th><th>Waktu</th><th>User</th><th>Artikel</th><th>Sumber</th><th>Kategori</th><th>Event</th></tr></thead>
+    <tbody id="ic-log-tbody"></tbody></table>
+    <div style="padding:10px 16px;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--tx2)">
+      <span id="ic-pgn-info"></span><div id="ic-pgn-btns" style="display:flex;gap:4px"></div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <div class="tw-head"><div class="tw-title">User Paling Aktif</div></div>
+    <table><thead><tr><th>No</th><th>Pseudonim</th><th>Total</th></tr></thead>
+    <tbody id="ic-top-users"></tbody></table>
+  </div>
+</div>
+
+<!-- ══ CF MODEL ══ -->
+<div id="page-cf" class="page">
+  <div class="sec-title">Collaborative Filtering <span class="sec-sub">Item-based CF dengan Time-Decay</span></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="sc-glow" style="background:var(--ac)"></div><div class="sc-icon" style="background:rgba(0,212,170,.1)">🤖</div><div class="sc-label">Status Model</div><div class="sc-value" id="cf-built" style="font-size:14px;margin-top:6px;color:var(--or)">Belum Dibangun</div><div class="sc-trend" id="cf-built-at">-</div></div>
+    <div class="stat-card"><div class="sc-glow" style="background:var(--ac2)"></div><div class="sc-icon" style="background:rgba(74,158,255,.1)">👥</div><div class="sc-label">User Terindeks</div><div class="sc-value" id="cf-n-users" style="color:var(--ac2)">0</div><div class="sc-trend">punya interaksi</div></div>
+    <div class="stat-card"><div class="sc-glow" style="background:var(--ac4)"></div><div class="sc-icon" style="background:rgba(255,209,102,.1)">📰</div><div class="sc-label">Item Terindeks</div><div class="sc-value" id="cf-n-items" style="color:var(--ac4)">0</div><div class="sc-trend">artikel dengan similarity</div></div>
+    <div class="stat-card"><div class="sc-glow" style="background:var(--gr)"></div><div class="sc-icon" style="background:rgba(16,185,129,.1)">✅</div><div class="sc-label">Cache Rekomendasi</div><div class="sc-value" id="cf-n-recs" style="color:var(--gr)">0</div><div class="sc-trend">user dapat rekomendasi</div></div>
+  </div>
+  <!-- Parameter CF Panel -->
+  <div class="chart-box" style="margin-bottom:14px">
+    <div class="chart-title">⚙ Parameter Model</div>
+    <div class="chart-sub">Atur bobot dan time-decay — perlu Build ulang agar diterapkan</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px">
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:12px;color:var(--tx2)">λ (Time-Decay)</span>
+          <span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--ac)" id="cf-lbl-lambda">0.10</span>
+        </div>
+        <input type="range" id="cf-param-lambda" min="0.01" max="1.0" step="0.01" value="0.1"
+          oninput="document.getElementById('cf-lbl-lambda').textContent=parseFloat(this.value).toFixed(2)">
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:12px;color:var(--tx2)">Bobot Click</span>
+          <span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--ac)" id="cf-lbl-click">1.0</span>
+        </div>
+        <input type="range" id="cf-param-click" min="0" max="5" step="0.1" value="1.0"
+          oninput="document.getElementById('cf-lbl-click').textContent=parseFloat(this.value).toFixed(1)">
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:12px;color:var(--tx2)">Bobot Read</span>
+          <span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--ac)" id="cf-lbl-read">2.0</span>
+        </div>
+        <input type="range" id="cf-param-read" min="0" max="5" step="0.1" value="2.0"
+          oninput="document.getElementById('cf-lbl-read').textContent=parseFloat(this.value).toFixed(1)">
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:12px;color:var(--tx2)">Bobot Share</span>
+          <span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--ac)" id="cf-lbl-share">3.0</span>
+        </div>
+        <input type="range" id="cf-param-share" min="0" max="5" step="0.1" value="3.0"
+          oninput="document.getElementById('cf-lbl-share').textContent=parseFloat(this.value).toFixed(1)">
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-size:12px;color:var(--tx2)">Min Similarity</span>
+          <span style="font-size:12px;font-family:'IBM Plex Mono',monospace;color:var(--ac)" id="cf-lbl-minsim">0.010</span>
+        </div>
+        <input type="range" id="cf-param-minsim" min="0.001" max="0.1" step="0.001" value="0.01"
+          oninput="document.getElementById('cf-lbl-minsim').textContent=parseFloat(this.value).toFixed(3)">
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:8px">
+        <button class="btn btn-p btn-sm" onclick="saveCFParams()">Simpan Parameter</button>
+        <button class="btn btn-g btn-sm" onclick="resetCFParams()">Reset Default</button>
+      </div>
+    </div>
+    <div id="cf-params-status" style="font-size:11px;color:var(--tx2);margin-top:10px"></div>
+  </div>
+  <!-- CF Scheduler Panel -->
+  <div class="chart-box" style="margin-bottom:14px">
+    <div class="chart-title">⏱ Auto-Rebuild Scheduler</div>
+    <div class="chart-sub">Bangun ulang model CF secara otomatis berdasarkan interval</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
+      <div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:var(--tx2);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Berikutnya</div>
+            <div class="countdown" id="cf-sched-cd" style="font-size:20px">--:--:--</div>
+          </div>
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:var(--tx2);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Dijalankan</div>
+            <div style="font-size:20px;font-family:'IBM Plex Mono',monospace;color:var(--tx)" id="cf-sched-count">0</div>
+          </div>
+          <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
+            <div style="font-size:10px;color:var(--tx2);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Status</div>
+            <div style="font-size:11px;font-weight:500;color:var(--ac)" id="cf-sched-result">-</div>
+          </div>
+        </div>
+        <button class="btn btn-p btn-sm" onclick="cfRunSchedNow()">▶ Build Sekarang</button>
+        <div id="cf-sched-saved" style="font-size:11px;color:var(--ac);display:none;margin-top:6px">✓ Tersimpan</div>
+      </div>
+      <div>
+        <div class="toggle-wrap" style="border-bottom:none">
+          <div><div class="toggle-title">Rebuild Otomatis</div><div class="toggle-desc">Aktifkan jadwal periodik</div></div>
+          <label class="sw"><input type="checkbox" id="cf-sched-toggle" onchange="saveCFScheduler()">
+            <div class="sw-track"></div><div class="sw-thumb"></div></label>
+        </div>
+        <div style="padding:10px 0">
+          <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+            <span style="font-size:13px;font-weight:500">Interval</span>
+            <span style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:var(--ac)" id="cf-interval-lbl">6 jam</span>
+          </div>
+          <input type="range" id="cf-interval-slider" min="1" max="24" value="6" step="1"
+            oninput="updateCFIntervalLbl(this.value)" onchange="saveCFScheduler()" style="width:100%">
+        </div>
+        <div class="toggle-wrap" style="border-bottom:none;padding-top:6px">
+          <div><div class="toggle-title" style="font-size:12px">Rebuild Setelah Crawling</div><div class="toggle-desc">Otomatis build CF tiap selesai crawl</div></div>
+          <label class="sw"><input type="checkbox" id="cf-auto-after-crawl" onchange="saveCFScheduler()">
+            <div class="sw-track"></div><div class="sw-thumb"></div></label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center">
+    <button class="btn btn-p" id="btn-cf-build" onclick="cfBuild()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>Build / Rebuild Model
+    </button>
+    <button class="btn btn-g" onclick="cfEvaluate()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Evaluasi Offline
+    </button>
+    <div id="cf-build-status" style="font-size:12px;color:var(--tx2)"></div>
+  </div>
+
+  <!-- Gauge metrik evaluasi -->
+  <div id="cf-eval-result" style="display:none;margin-bottom:14px">
+    <div class="chart-box">
+      <div class="chart-title">Hasil Evaluasi Offline (Hold-out 20%)</div>
+      <div class="chart-sub">Diukur pada data uji 20% interaksi terbaru per user</div>
+      <div class="gauge-grid" id="cf-metrics" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- Visualisasi Log Interaksi per User -->
+  <div class="chart-box" style="margin-bottom:14px">
+    <div class="chart-title">📊 Analisis Log Interaksi User</div>
+    <div class="chart-sub">Lihat pola klik satu pengguna sebelum melihat rekomendasinya</div>
+    <div style="display:flex;gap:8px;margin:12px 0">
+      <input class="input" id="cf-user-viz-input" placeholder="Masukkan pseudonym..." style="flex:1">
+      <button class="btn btn-g btn-sm" onclick="loadUserVisualization()">Tampilkan</button>
+    </div>
+    <div id="cf-user-viz-empty" style="font-size:13px;color:var(--tx2);padding:10px 0">
+      Pilih user dari tabel di bawah, atau masukkan pseudonym secara manual.
+    </div>
+    <div id="cf-user-viz-content" style="display:none">
+      <div class="mini-stats" style="margin-bottom:14px">
+        <div class="mini-stat"><div class="mini-stat-icon">👤</div><div><div class="mini-stat-label">User</div><div class="mini-stat-val" id="viz-pseudonym" style="font-size:13px">-</div></div></div>
+        <div class="mini-stat"><div class="mini-stat-icon">👆</div><div><div class="mini-stat-label">Total Interaksi</div><div class="mini-stat-val" id="viz-total">0</div></div></div>
+        <div class="mini-stat"><div class="mini-stat-icon">📅</div><div><div class="mini-stat-label">Aktif Sejak</div><div class="mini-stat-val" id="viz-since" style="font-size:12px">-</div></div></div>
+      </div>
+      <div class="chart-grid">
+        <div>
+          <div class="chart-title" style="font-size:12px">Kategori Favorit</div>
+          <div class="chart-wrap" style="height:180px"><canvas id="chart-user-kat"></canvas></div>
+        </div>
+        <div>
+          <div class="chart-title" style="font-size:12px">Jam Aktif (24 jam)</div>
+          <div class="chart-wrap" style="height:180px"><canvas id="chart-user-jam"></canvas></div>
+        </div>
+      </div>
+      <div class="chart-title" style="font-size:12px;margin-top:14px">Timeline Klik</div>
+      <div class="chart-sub">Urutan artikel yang diklik dari waktu ke waktu</div>
+      <table style="margin-top:8px">
+        <thead><tr><th>Waktu</th><th>Artikel</th><th>Sumber</th><th>Kategori</th><th>Event</th></tr></thead>
+        <tbody id="viz-timeline-tb"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="table-wrap" style="margin-bottom:14px">
+    <div class="tw-head">
+      <div class="tw-title">Test Rekomendasi</div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <input class="input" id="cf-test-user" placeholder="Masukkan pseudonym..." style="width:280px">
+        <button class="btn btn-g btn-sm" onclick="cfTestUser()">Coba</button>
+      </div>
+    </div>
+    <div id="cf-test-result" style="padding:14px 18px;font-size:13px;color:var(--tx2)">Masukkan pseudonym untuk melihat rekomendasi.</div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="tw-head"><div class="tw-title">User Aktif (klik untuk test)</div></div>
+    <table><thead><tr><th>No</th><th>Pseudonym</th><th>Total Interaksi</th><th>Aksi</th></tr></thead>
+    <tbody id="cf-top-users-tb"></tbody></table>
+  </div>
+</div>
+
+<!-- ══ SCHEDULER ══ -->
+<div id="page-scheduler" class="page">
+  <div class="sec-title">Scheduler <span class="sec-sub">Crawling otomatis terjadwal</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="chart-box">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+        <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--tx2);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Berikutnya</div>
+          <div class="countdown" id="sched-cd">--:--:--</div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--tx2);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Dijalankan</div>
+          <div style="font-size:24px;font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--tx)" id="sched-count">0</div>
+        </div>
+        <div style="background:var(--sf2);border-radius:8px;padding:12px;text-align:center">
+          <div style="font-size:10px;color:var(--tx2);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Hasil</div>
+          <div style="font-size:12px;font-weight:500;color:var(--ac)" id="sched-result">-</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--tx2);display:flex;justify-content:space-between;margin-bottom:14px">
+        <span>Terakhir: <strong id="sched-last" style="color:var(--tx)">-</strong></span>
+        <span>Jadwal: <strong id="sched-next" style="color:var(--tx)">-</strong></span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-p btn-sm" onclick="runNow()">▶ Jalankan Sekarang</button>
+        <div id="sched-saved" style="font-size:11px;color:var(--ac);align-self:center;display:none">✓ Tersimpan</div>
+      </div>
+    </div>
+    <div class="chart-box">
+      <div class="toggle-wrap">
+        <div><div class="toggle-title">Crawling Otomatis</div><div class="toggle-desc">Aktifkan jadwal crawling periodik</div></div>
+        <label class="sw"><input type="checkbox" id="sched-toggle" onchange="saveScheduler()">
+          <div class="sw-track"></div><div class="sw-thumb"></div></label>
+      </div>
+      <div style="padding:12px 0;border-bottom:1px solid var(--bd)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+          <span style="font-size:13px;font-weight:500">Interval</span>
+          <span style="font-size:13px;font-family:'IBM Plex Mono',monospace;color:var(--ac)" id="interval-lbl">6 jam</span>
+        </div>
+        <input type="range" id="interval-slider" min="1" max="24" value="6" step="1"
+          oninput="updateIntervalLbl(this.value)" onchange="saveScheduler()" style="width:100%">
+        <div class="preset-row">
+          <button class="preset-btn" onclick="setPreset(1)">1j</button>
+          <button class="preset-btn" onclick="setPreset(3)">3j</button>
+          <button class="preset-btn" onclick="setPreset(6)">6j</button>
+          <button class="preset-btn" onclick="setPreset(12)">12j</button>
+          <button class="preset-btn" onclick="setPreset(24)">24j</button>
+        </div>
+      </div>
+      <div style="padding-top:12px">
+        <div style="font-size:13px;font-weight:500;margin-bottom:7px">Kategori</div>
+        <select class="sel" id="sched-kat" onchange="saveScheduler()"></select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LOGS ══ -->
+<div id="page-logs" class="page">
+  <div class="sec-title">Log Crawling</div>
+  <div class="table-wrap">
+    <table><thead><tr><th>Run ID</th><th>Portal</th><th>Waktu</th><th>Baru</th><th>Duplikat</th><th>Error</th><th>Status</th></tr></thead>
+    <tbody id="log-tbody"></tbody></table>
+  </div>
+</div>
+
+</div></div><!-- /content /layout -->
+
+<!-- MODAL ARTIKEL -->
+<div class="modal-bg" id="modal-article" onclick="closeModal('modal-article',event)">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-close" onclick="closeModal('modal-article')">✕</div>
+    <div id="ma-title" style="font-family:'Instrument Serif',serif;font-size:19px;line-height:1.35;margin-bottom:10px"></div>
+    <div id="ma-meta" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px"></div>
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin-bottom:5px">Ringkasan</div>
+    <div id="ma-excerpt" style="font-size:13px;color:var(--ac);margin-bottom:14px;line-height:1.6"></div>
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--tx2);margin-bottom:5px">Isi Berita</div>
+    <div id="ma-body" style="font-size:13px;line-height:1.8;color:#94a3b8;white-space:pre-wrap;max-height:360px;overflow-y:auto"></div>
+    <div style="margin-top:12px;display:flex;gap:7px">
+      <a id="ma-link" href="#" target="_blank" class="btn btn-g btn-sm">↗ Baca Asli</a>
+      <div id="ma-hashes" style="font-size:10px;color:var(--tx3);align-self:center;font-family:'IBM Plex Mono',monospace"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GANTI PASSWORD -->
+<div class="modal-bg" id="modal-change-pw" onclick="closeModal('modal-change-pw',event)">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-close" onclick="closeModal('modal-change-pw')">✕</div>
+    <div class="modal-title">Ganti Password</div>
+    <div class="field-group"><label class="field-label">Password Lama</label><input class="input" id="pw-old" type="password"></div>
+    <div class="field-group"><label class="field-label">Password Baru</label><input class="input" id="pw-new" type="password"></div>
+    <div class="field-group"><label class="field-label">Konfirmasi Password Baru</label><input class="input" id="pw-confirm" type="password"></div>
+    <div id="pw-error" style="font-size:12px;color:var(--rd);margin-top:4px;display:none"></div>
+    <div id="pw-success" style="font-size:12px;color:var(--gr);margin-top:4px;display:none"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-p" onclick="submitChangePassword()">Simpan</button>
+      <button class="btn btn-g" onclick="closeModal('modal-change-pw')">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div class="statusbar" id="statusbar"><div class="sdot"></div><span id="sb-text">Crawling...</span></div>
+
+<script>
+// ── CHART.JS CONFIG ────────────────────────────────────────────
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#2d3748';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+const CHART_COLORS = ['#00d4aa','#4a9eff','#ffd166','#a78bfa','#ff6b6b','#10b981','#f59e0b','#ef4444','#6366f1','#ec4899','#14b8a6','#f97316','#84cc16','#06b6d4','#8b5cf6'];
+let _charts = {};
+
+function destroyChart(id){ if(_charts[id]){ _charts[id].destroy(); delete _charts[id]; } }
+
+// ── STATE ──────────────────────────────────────────────────────
+let portals=[],kategoriList=[],_artCurrentPage=1,_art2CurrentPage=1,_icPage=1,pollTimer=null,schedPoll=null;
+const _pgnCb={};
+const _pc={};
+const COLORS=[['rgba(0,212,170,.15)','#00d4aa'],['rgba(74,158,255,.15)','#4a9eff'],['rgba(255,209,102,.15)','#ffd166'],['rgba(167,139,250,.15)','#a78bfa'],['rgba(255,107,107,.15)','#ff6b6b'],['rgba(16,185,129,.15)','#10b981'],['rgba(245,158,11,.15)','#f59e0b'],['rgba(239,68,68,.15)','#ef4444'],['rgba(99,102,241,.15)','#6366f1'],['rgba(236,72,153,.15)','#ec4899']];
+function gp(n){if(!_pc[n]){const i=Object.keys(_pc).length%COLORS.length;_pc[n]=COLORS[i];}return _pc[n];}
+
+// ── NAV ───────────────────────────────────────────────────────
+function switchPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item,.hn').forEach(e=>e.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll(`[onclick*="'${name}'"]`).forEach(e=>e.classList.add('active'));
+  if(name==='logs')         loadLogs();
+  if(name==='articles')     {_art2CurrentPage=1;loadArticles2();}
+  if(name==='crawl')        {_artCurrentPage=1;loadArticles();renderPortalChecks();}
+  if(name==='dashboard')    {loadStats();loadClickStats();}
+  if(name==='interactions') {_icPage=1;loadInteractions();loadInteractionSummary();}
+  if(name==='cf')           {loadCFStatus();loadCFScheduler();startCFSchedPoll();loadCFParams();}
+  if(name==='scheduler')    startSchedPoll();
+  else if(name!=='scheduler') stopSchedPoll();
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+(async()=>{
+  checkAuth();
+  await Promise.all([loadPortals(),loadKategori(),loadStats()]);
+  loadArticles();
+  loadClickStats();
+  loadScheduler();startSchedPoll();
+  loadCFStatus();
+})();
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function checkAuth(){
+  try{
+    const r=await fetch('/api/auth/me');const d=await r.json();
+    if(!d.logged_in){window.location.href='/login';return;}
+    const el=document.getElementById('h-username');
+    if(el)el.textContent=`👤 ${d.username}`;
+  }catch(e){window.location.href='/login';}
+}
+async function doLogout(){
+  if(!confirm('Yakin ingin logout?'))return;
+  await fetch('/logout',{method:'POST'});
+  window.location.href='/login';
+}
+function openChangePassword(){
+  ['pw-old','pw-new','pw-confirm'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pw-error').style.display='none';
+  document.getElementById('pw-success').style.display='none';
+  document.getElementById('modal-change-pw').classList.add('vis');
+}
+async function submitChangePassword(){
+  const oldPw=document.getElementById('pw-old').value.trim();
+  const newPw=document.getElementById('pw-new').value.trim();
+  const conf=document.getElementById('pw-confirm').value.trim();
+  const errEl=document.getElementById('pw-error');const okEl=document.getElementById('pw-success');
+  errEl.style.display='none';okEl.style.display='none';
+  if(!oldPw||!newPw||!conf){errEl.textContent='Semua field wajib diisi.';errEl.style.display='block';return;}
+  if(newPw!==conf){errEl.textContent='Password baru tidak cocok.';errEl.style.display='block';return;}
+  if(newPw.length<6){errEl.textContent='Minimal 6 karakter.';errEl.style.display='block';return;}
+  const r=await fetch('/api/auth/change-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old_password:oldPw,new_password:newPw})});
+  const d=await r.json();
+  if(r.ok){okEl.textContent='Password berhasil diubah!';okEl.style.display='block';setTimeout(()=>closeModal('modal-change-pw'),1500);}
+  else{errEl.textContent=d.error||'Gagal.';errEl.style.display='block';}
+}
+
+// ── PORTALS ───────────────────────────────────────────────────
+async function loadPortals(){
+  try{
+    const r=await fetch('/admin/portals');if(!r.ok)return;
+    const data=await r.json();portals=Array.isArray(data)?data:[];
+    const sbP=document.getElementById('sb-portal');if(sbP)sbP.textContent=portals.length;
+    renderPortalTable();renderPortalChecks();renderFilterSelects();
+  }catch(e){console.error('loadPortals:',e);}
+}
+function renderPortalTable(){
+  const tb=document.getElementById('portal-tbody');
+  if(!portals.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:18px;color:var(--tx3)">Belum ada portal.</td></tr>';return;}
+  tb.innerHTML=portals.map((p,i)=>{
+    const mc=p.method==='rss'?'pill-bl':p.method==='hybrid'?'pill-gr':'pill-or';
+    return`<tr>
+      <td class="td-mono">${i+1}</td><td><strong>${p.name}</strong></td>
+      <td class="td-mono">${p.domain||'-'}</td>
+      <td><span class="pill ${mc}" style="font-size:10px">${p.method||'hybrid'}</span></td>
+      <td class="td-mono" style="color:var(--ac)">${p.rss_count||0}</td>
+      <td class="td-mono" style="color:var(--ac2)">${p.html_count||0}</td>
+      <td><span class="pill ${p.active?'pill-gr':'pill-or'}">${p.active?'Aktif':'Nonaktif'}</span></td>
+      <td><button class="btn btn-g btn-sm" onclick="togglePortal('${p.domain}',${!p.active})">${p.active?'Nonaktifkan':'Aktifkan'}</button></td>
+    </tr>`;}).join('');
+}
+function renderPortalChecks(){
+  const el=document.getElementById('portal-checks');if(!el)return;
+  if(!portals.length){el.innerHTML='<span style="color:var(--tx2);font-size:12px">Memuat portal...</span>';return;}
+  el.innerHTML=portals.filter(p=>p.active!==false).map(p=>{
+    const badge=p.method==='rss'?'🔵':p.method==='hybrid'?'🟢':'🟠';
+    return`<label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:5px 10px;font-size:12px">
+      <input type="checkbox" class="portal-chk" value="${p.name}" checked style="cursor:pointer">${badge} ${p.name}
+    </label>`;}).join('');
+}
+function renderFilterSelects(){
+  if(!portals.length)return;
+  const srcs='<option value="">Semua Sumber</option>'+portals.map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+  ['art-src-filter','art2-src'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=srcs;});
+}
+async function togglePortal(domain,active){
+  await fetch(`/admin/portals/${encodeURIComponent(domain)}/toggle`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({active})});
+  loadPortals();loadStats();
+}
+
+// ── KATEGORI ──────────────────────────────────────────────────
+async function loadKategori(){
+  const r=await fetch('/api/kategori');kategoriList=await r.json();
+  const optsFilter='<option value="">Semua Kategori</option>'+kategoriList.filter(k=>k!=='Semua').map(k=>`<option value="${k}">${k}</option>`).join('');
+  const optsCrawl='<option value="Semua">Semua Kategori</option>'+kategoriList.filter(k=>k!=='Semua').map(k=>`<option value="${k}">${k}</option>`).join('');
+  ['art-kat-filter','art2-kat'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=optsFilter;});
+  ['crawl-kat','sched-kat'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=optsCrawl;});
+}
+
+// ── STATS + CHARTS ────────────────────────────────────────────
+async function loadStats(){
+  try{
+    const r=await fetch('/api/stats');const d=await r.json();
+    document.getElementById('stat-articles').textContent=d.total_articles;
+    document.getElementById('stat-portals').textContent=d.total_portals;
+    document.getElementById('stat-clicks').textContent=d.total_clicks;
+    document.getElementById('stat-users').textContent=d.total_users;
+    document.getElementById('h-total').textContent=d.total_articles;
+    document.getElementById('h-portals').textContent=d.total_portals;
+    document.getElementById('sb-total').textContent=d.total_articles;
+    document.getElementById('sb-art').textContent=d.total_articles;
+    const sbInt=document.getElementById('sb-interact');if(sbInt)sbInt.textContent=d.total_clicks||0;
+
+    // Chart: artikel per sumber (horizontal bar)
+    const srcData=d.per_source||[];
+    destroyChart('source');
+    const ctxS=document.getElementById('chart-source');
+    if(ctxS&&srcData.length){
+      _charts['source']=new Chart(ctxS,{
+        type:'bar',
+        data:{
+          labels:srcData.map(s=>s.source),
+          datasets:[{label:'Artikel',data:srcData.map(s=>s.count),
+            backgroundColor:CHART_COLORS.map(c=>c+'33'),
+            borderColor:CHART_COLORS,borderWidth:1.5,borderRadius:4}]
+        },
+        options:{
+          indexAxis:'y',responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} artikel`}}},
+          scales:{x:{grid:{color:'#2d374844'},ticks:{font:{size:11}}},y:{grid:{display:false},ticks:{font:{size:11}}}}
+        }
+      });
+    }
+
+    // Chart: artikel per kategori (doughnut)
+    const katData=d.per_kategori||[];
+    destroyChart('kategori');
+    const ctxK=document.getElementById('chart-kategori');
+    if(ctxK&&katData.length){
+      _charts['kategori']=new Chart(ctxK,{
+        type:'doughnut',
+        data:{
+          labels:katData.map(k=>k.kategori),
+          datasets:[{data:katData.map(k=>k.count),backgroundColor:CHART_COLORS.map(c=>c+'cc'),borderColor:CHART_COLORS,borderWidth:1.5}]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,cutout:'60%',
+          plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12,padding:8}},
+            tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} artikel`}}}
+        }
+      });
+    }
+
+    // Log crawling di dashboard
+    const logs=d.crawl_logs||[];
+    const dlogs=document.getElementById('dash-logs');
+    if(dlogs){
+      dlogs.innerHTML=logs.map(l=>`<tr>
+        <td>${l.portal_name||'-'}</td>
+        <td class="td-mono">${(l.started_at||'').substring(0,16)}</td>
+        <td class="td-mono" style="color:var(--gr)">+${l.articles_new}</td>
+        <td class="td-mono" style="color:var(--or)">${l.articles_dup}</td>
+        <td><span class="pill ${l.status==='done'?'pill-gr':'pill-rd'}">${l.status}</span></td>
+      </tr>`).join('')||'<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--tx3)">Belum ada log.</td></tr>';
+    }
+  }catch(e){console.error('loadStats:',e);}
+}
+
+// ── CLICK STATS + BUBBLE ──────────────────────────────────────
+async function loadClickStats(){
+  try{
+    const r=await fetch('/api/stats/clicks');if(!r.ok)return;
+    const d=await r.json();
+    renderBubblePortal(d.portal_clicks||[]);
+    renderBubbleArticle(d.article_clicks||[]);
+
+    // Chart klik per kategori di dashboard
+    const katClicks=d.article_clicks||[];
+    const katMap={};
+    katClicks.forEach(a=>{ katMap[a.category]=(katMap[a.category]||0)+a.click_count; });
+    const katEntries=Object.entries(katMap).sort((a,b)=>b[1]-a[1]);
+    destroyChart('click-kat');
+    const ctxCK=document.getElementById('chart-click-kat');
+    if(ctxCK&&katEntries.length){
+      _charts['click-kat']=new Chart(ctxCK,{
+        type:'polarArea',
+        data:{
+          labels:katEntries.map(e=>e[0]),
+          datasets:[{data:katEntries.map(e=>e[1]),
+            backgroundColor:CHART_COLORS.map(c=>c+'88'),
+            borderColor:CHART_COLORS,borderWidth:1}]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10,padding:6}}},
+          scales:{r:{grid:{color:'#2d374866'},ticks:{display:false}}}
+        }
+      });
+    }
+  }catch(e){console.error('loadClickStats:',e);}
+}
+
+function renderBubblePortal(data){
+  const el=document.getElementById('bubble-portal');if(!el)return;
+  if(!data.length){el.innerHTML='<span style="color:var(--tx3);font-size:12px">Belum ada data klik</span>';return;}
+  const max=Math.max(...data.map(d=>d.click_count),1);
+  el.innerHTML=`<div class="bubble-wrap">${
+    data.map((d,i)=>{
+      const ratio=d.click_count/max;
+      const size=Math.max(46,Math.round(ratio*120));
+      return`<div class="bubble" style="width:${size}px;height:${size}px;background:${CHART_COLORS[i%CHART_COLORS.length]}cc">
+        <div class="bubble-label" style="font-size:${size<60?8:10}px">${d.portal}</div>
+        <div class="btt"><strong>${d.portal}</strong>${d.click_count} klik</div>
+      </div>`;}).join('')
+  }</div>`;
+}
+
+function renderBubbleArticle(data){
+  const el=document.getElementById('bubble-article');if(!el)return;
+  if(!data.length){el.innerHTML='<span style="color:var(--tx3);font-size:12px">Belum ada data klik</span>';return;}
+  const max=Math.max(...data.map(d=>d.click_count),1);
+  el.innerHTML=`<div class="bubble-wrap">${
+    data.map((d,i)=>{
+      const ratio=d.click_count/max;
+      const size=Math.max(42,Math.round(ratio*120));
+      const short=d.title.length>20?d.title.substring(0,18)+'…':d.title;
+      return`<div class="bubble" style="width:${size}px;height:${size}px;background:${CHART_COLORS[(i+3)%CHART_COLORS.length]}cc" onclick="openArticle(${d.id})">
+        <div class="bubble-label" style="font-size:${size<55?7:9}px">${short}</div>
+        <div class="btt"><strong>${d.title.substring(0,50)}${d.title.length>50?'…':''}</strong>${d.source} · ${d.click_count} klik</div>
+      </div>`;}).join('')
+  }</div>`;
+}
+
+// ── PAGINATION ────────────────────────────────────────────────
+function renderPgn(total,totalPages,curPage,infoId,btnsId,key){
+  const infoEl=document.getElementById(infoId),btnsEl=document.getElementById(btnsId);
+  if(!infoEl||!btnsEl)return;
+  _pgnCb[key]=function(p){if(key==='art1'){_artCurrentPage=p;loadArticles();}else if(key==='art2'){_art2CurrentPage=p;loadArticles2();}else if(key==='ic'){_icPage=p;loadInteractions();}};
+  infoEl.textContent=`${total} artikel · hal ${curPage}/${totalPages}`;
+  if(totalPages<=1){btnsEl.innerHTML='';return;}
+  let btns=[`<button class="btn btn-g btn-sm" onclick="_pgnCb['${key}'](${curPage-1})" ${curPage===1?'disabled':''}>‹</button>`];
+  for(let i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||Math.abs(i-curPage)<=1)
+      btns.push(`<button class="btn btn-${i===curPage?'p':'g'} btn-sm" onclick="_pgnCb['${key}'](${i})">${i}</button>`);
+    else if(Math.abs(i-curPage)===2)btns.push(`<span style="color:var(--tx3);padding:0 3px">…</span>`);
+  }
+  btns.push(`<button class="btn btn-g btn-sm" onclick="_pgnCb['${key}'](${curPage+1})" ${curPage===totalPages?'disabled':''}>›</button>`);
+  btnsEl.innerHTML=btns.join('');
+}
+
+// ── ARTICLES ──────────────────────────────────────────────────
+async function loadArticles(){
+  try{
+    const q=document.getElementById('art-search')?.value||'';
+    const src=document.getElementById('art-src-filter')?.value||'';
+    const kat=document.getElementById('art-kat-filter')?.value||'';
+    const katP=(kat&&kat!=='Semua')?`&kategori=${encodeURIComponent(kat)}`:'';
+    const srcP=src?`&source=${encodeURIComponent(src)}`:'';
+    const qP=q?`&q=${encodeURIComponent(q)}`:'';
+    const r=await fetch(`/api/articles?page=${_artCurrentPage}&per_page=20${qP}${srcP}${katP}`);
+    if(!r.ok)return;const d=await r.json();const arts=d.data||[];
+    document.getElementById('result-count').textContent=d.total||0;
+    const tb=document.getElementById('art-tbody');if(!tb)return;
+    if(!arts.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--tx3)">Belum ada data.</td></tr>';return;}
+    tb.innerHTML=arts.map(a=>{const[bg,fg]=gp(a.source||'');return`<tr>
+      <td class="td-mono">${a.id}</td>
+      <td class="td-title" style="max-width:260px"><a href="${a.url}" target="_blank">${a.title}</a></td>
+      <td><span class="pill" style="background:${bg};color:${fg}">${a.source||'-'}</span></td>
+      <td><span class="pill pill-bl">${a.category||'Umum'}</span></td>
+      <td class="td-mono">${(a.url_hash||'').substring(0,10)}…</td>
+      <td class="td-mono">${a.published_at||'-'}</td>
+      <td><button class="btn btn-g btn-sm" onclick="openArticle(${a.id})">Lihat</button></td>
+    </tr>`;}).join('');
+    renderPgn(d.total||0,d.pages||1,_artCurrentPage,'pgn-info','pgn-btns','art1');
+  }catch(e){console.error('loadArticles:',e);}
+}
+
+async function loadArticles2(){
+  try{
+    const q=document.getElementById('art2-search')?.value||'';
+    const src=document.getElementById('art2-src')?.value||'';
+    const kat=document.getElementById('art2-kat')?.value||'';
+    const katP=(kat&&kat!=='Semua')?`&kategori=${encodeURIComponent(kat)}`:'';
+    const srcP=src?`&source=${encodeURIComponent(src)}`:'';
+    const qP=q?`&q=${encodeURIComponent(q)}`:'';
+    const r=await fetch(`/api/articles?page=${_art2CurrentPage}&per_page=25${qP}${srcP}${katP}`);
+    if(!r.ok)return;const d=await r.json();const arts=Array.isArray(d.data)?d.data:[];
+    const countEl=document.getElementById('art2-count');if(countEl)countEl.textContent=d.total||0;
+    const tb=document.getElementById('art2-tbody');if(!tb)return;
+    if(!arts.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:18px;color:var(--tx3)">Belum ada data.</td></tr>';return;}
+    tb.innerHTML=arts.map(a=>{const[bg,fg]=gp(a.source||'');return`<tr>
+      <td class="td-mono">${a.id}</td>
+      <td class="td-title" style="max-width:220px"><a href="${a.url||'#'}" target="_blank">${a.title||'-'}</a></td>
+      <td><span class="pill" style="background:${bg};color:${fg}">${a.source||'-'}</span></td>
+      <td><span class="pill pill-bl">${a.category||'Umum'}</span></td>
+      <td class="td-mono" style="font-size:10px">${(a.url_hash||'').substring(0,12)}…</td>
+      <td class="td-mono" style="font-size:10px">${(a.content_hash||'').substring(0,10)}…</td>
+      <td class="td-mono">${(a.parsed_at||'').substring(0,16)}</td>
+      <td><button class="btn btn-g btn-sm" onclick="openArticle(${a.id})">Detail</button></td>
+    </tr>`;}).join('');
+    renderPgn(d.total||0,d.pages||1,_art2CurrentPage,'art2-pgn-info','art2-pgn-btns','art2');
+  }catch(e){console.error('loadArticles2:',e);}
+}
+
+async function openArticle(id){
+  const r=await fetch(`/api/articles/${id}`);const a=await r.json();
+  const[bg,fg]=gp(a.source||'');
+  document.getElementById('ma-title').textContent=a.title;
+  document.getElementById('ma-meta').innerHTML=`<span class="pill" style="background:${bg};color:${fg}">${a.source||'-'}</span><span class="pill pill-bl">${a.category||'Umum'}</span><span style="font-size:12px;color:var(--tx2)">${a.published_at||''}</span>`;
+  document.getElementById('ma-excerpt').textContent=a.excerpt||'(tidak ada ringkasan)';
+  document.getElementById('ma-body').textContent=a.body||'(isi tidak tersedia)';
+  document.getElementById('ma-link').href=a.url;
+  document.getElementById('ma-hashes').innerHTML=`url_hash:${(a.url_hash||'').substring(0,14)}… | simhash:${a.simhash||'-'}`;
+  document.getElementById('modal-article').classList.add('vis');
+}
+
+// ── CRAWLING ──────────────────────────────────────────────────
+async function startCrawl(){
+  const checks=[...document.querySelectorAll('.portal-chk:checked')].map(c=>c.value);
+  if(!checks.length){alert('Pilih minimal satu portal.');return;}
+  const btn=document.getElementById('btn-crawl');
+  btn.disabled=true;
+  btn.innerHTML=`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="animation:spin 1s linear infinite"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>Crawling...`;
+  document.getElementById('prog-area').classList.add('vis');document.getElementById('statusbar').classList.add('vis');
+  document.getElementById('prog-items').innerHTML=checks.map(name=>{const safeId=name.replace(/[^a-zA-Z0-9]/g,'_');return`
+    <div class="prog-item" id="pi-${safeId}"><div class="pd" id="pd-${safeId}"></div>
+    <span style="flex:1">${name}</span><span id="ps-${safeId}" style="font-size:11px;color:var(--tx2)">Menunggu...</span></div>`;}).join('');
+  await fetch('/api/crawl',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({portal_names:checks,kategori:document.getElementById('crawl-kat').value})});
+  pollTimer=setInterval(async()=>{
+    const sr=await fetch('/api/crawl/status');const sd=await sr.json();
+    sd.progress.forEach(p=>{
+      const rawKey=p.source||p.name||'';const key=rawKey.replace(/[^a-zA-Z0-9]/g,'_');
+      const dot=document.getElementById(`pd-${key}`),st=document.getElementById(`ps-${key}`);
+      if(!dot)return;
+      dot.className='pd '+(p.status==='done'?'done':'crawling');
+      if(p.status==='done')st.innerHTML=`<span style="color:var(--gr)">+${p.count||0} artikel</span>`;
+      else if(sd.article_progress[1]>0&&(sd.current_source===rawKey||sd.current_source===key)){
+        const pct=Math.round(sd.article_progress[0]/sd.article_progress[1]*100);
+        const ap=document.getElementById('art-prog');
+        if(ap){ap.style.display='block';document.getElementById('art-count').textContent=`${sd.article_progress[0]}/${sd.article_progress[1]}`;document.getElementById('art-bar').style.width=pct+'%';document.getElementById('art-title').textContent=sd.current_article||'';}
+        st.innerHTML=`<em style="color:var(--tx2)">Artikel ${sd.article_progress[0]}/${sd.article_progress[1]}...</em>`;
+      }
+    });
+    document.getElementById('sb-text').textContent=`${sd.done}/${sd.total} portal selesai`;
+    if(!sd.running){
+      clearInterval(pollTimer);btn.disabled=false;
+      btn.innerHTML=`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>Mulai Crawling`;
+      document.getElementById('statusbar').classList.remove('vis');document.getElementById('art-prog').style.display='none';
+      document.getElementById('crawl-time').textContent=`Selesai: ${new Date().toLocaleTimeString('id-ID')}`;
+      loadStats();loadArticles();loadArticles2();loadClickStats();
+    }
+  },2000);
+}
+
+// ── LOG CRAWLING ──────────────────────────────────────────────
+async function loadLogs(){
+  const r=await fetch('/api/stats');const d=await r.json();const logs=d.crawl_logs||[];
+  const tb=document.getElementById('log-tbody');
+  if(!logs.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--tx3)">Belum ada log.</td></tr>';return;}
+  tb.innerHTML=logs.map(l=>`<tr>
+    <td class="td-mono" style="font-size:10px">${l.run_id}</td><td>${l.portal_name||'-'}</td>
+    <td class="td-mono">${(l.started_at||'').substring(0,16)}</td>
+    <td class="td-mono" style="color:var(--gr)">+${l.articles_new}</td>
+    <td class="td-mono" style="color:var(--or)">${l.articles_dup}</td>
+    <td class="td-mono" style="color:var(--rd)">${l.articles_error}</td>
+    <td><span class="pill ${l.status==='done'?'pill-gr':'pill-rd'}">${l.status}</span></td>
+  </tr>`).join('');
+}
+
+// ── INTERACTIONS ──────────────────────────────────────────────
+async function loadInteractionSummary(){
+  try{
+    const r=await fetch('/api/interactions/summary');if(!r.ok)return;const d=await r.json();
+    const el=id=>document.getElementById(id);
+    if(el('ic-total'))el('ic-total').textContent=d.total_interactions||0;
+    if(el('ic-users'))el('ic-users').textContent=d.total_users||0;
+    if(el('ic-arts'))el('ic-arts').textContent=(d.top_articles||[]).length>=10?'10+':(d.top_articles||[]).length;
+    if(el('stat-clicks'))el('stat-clicks').textContent=d.total_interactions||0;
+    if(el('stat-users'))el('stat-users').textContent=d.total_users||0;
+    const sbInt=el('sb-interact');if(sbInt)sbInt.textContent=d.total_interactions||0;
+    const ta=el('ic-top-arts');
+    if(ta)ta.innerHTML=(d.top_articles||[]).map((a,i)=>{const[bg,fg]=gp(a.source||'');return`<tr>
+      <td class="td-mono">${i+1}</td>
+      <td style="max-width:180px;font-size:12px">${a.title||'-'}</td>
+      <td><span class="pill" style="background:${bg};color:${fg};font-size:10px">${a.source||'-'}</span></td>
+      <td class="td-mono" style="color:var(--ac);font-weight:700">${a.click_count}</td>
+    </tr>`;}).join('')||'<tr><td colspan="4" style="text-align:center;padding:14px;color:var(--tx3)">Belum ada data.</td></tr>';
+
+    // Chart klik per kategori di tab interactions
+    const perKat=d.per_kategori||[];
+    destroyChart('ic-kat');
+    const ctxIK=document.getElementById('chart-ic-kat');
+    if(ctxIK&&perKat.length){
+      _charts['ic-kat']=new Chart(ctxIK,{
+        type:'bar',
+        data:{labels:perKat.map(k=>k.kategori),datasets:[{label:'Klik',data:perKat.map(k=>k.count),backgroundColor:CHART_COLORS.map(c=>c+'99'),borderColor:CHART_COLORS,borderWidth:1.5,borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'#2d374844'}}}}
+      });
+    }
+
+    const tu=el('ic-top-users');
+    if(tu)tu.innerHTML=(d.top_users||[]).map((u,i)=>`<tr>
+      <td class="td-mono">${i+1}</td>
+      <td class="td-mono" style="color:var(--ac2)">${u.pseudonym}</td>
+      <td class="td-mono">${u.count}</td>
+    </tr>`).join('')||'<tr><td colspan="3" style="text-align:center;padding:14px;color:var(--tx3)">Belum ada data.</td></tr>';
+  }catch(e){console.error('loadInteractionSummary:',e);}
+}
+
+async function loadInteractions(){
+  try{
+    const user=document.getElementById('ic-filter-user')?.value||'';
+    const event=document.getElementById('ic-filter-event')?.value||'';
+    const url=`/api/interactions?page=${_icPage}&per_page=20`+(user?`&pseudonym=${encodeURIComponent(user)}`:'')+( event?`&event_type=${encodeURIComponent(event)}`:'');
+    const r=await fetch(url);if(!r.ok)return;const d=await r.json();const rows=d.data||[];
+    const countEl=document.getElementById('ic-log-count');if(countEl)countEl.textContent=d.total||0;
+    const tb=document.getElementById('ic-log-tbody');if(!tb)return;
+    if(!rows.length){tb.innerHTML='<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--tx3)">Belum ada log.</td></tr>';return;}
+    tb.innerHTML=rows.map(r=>{
+      const[bg,fg]=gp(r.article_source||'');
+      const ec=r.event_type==='click'?'var(--ac)':r.event_type==='read'?'var(--ac2)':'var(--or)';
+      return`<tr>
+        <td class="td-mono">${r.id}</td>
+        <td class="td-mono" style="font-size:11px">${(r.created_at||'').substring(0,16)}</td>
+        <td class="td-mono" style="color:var(--ac2);font-size:11px">${r.pseudonym||'-'}</td>
+        <td style="max-width:200px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.article_title||'-'}</td>
+        <td><span class="pill" style="background:${bg};color:${fg};font-size:10px">${r.article_source||'-'}</span></td>
+        <td><span class="pill pill-bl" style="font-size:10px">${r.article_category||'Umum'}</span></td>
+        <td><span style="font-size:11px;font-weight:700;color:${ec}">${r.event_type}</span></td>
+      </tr>`;}).join('');
+    renderPgn(d.total||0,d.pages||1,_icPage,'ic-pgn-info','ic-pgn-btns','ic');
+  }catch(e){console.error('loadInteractions:',e);}
+}
+
+// ── SCHEDULER ─────────────────────────────────────────────────
+function startSchedPoll(){schedPoll=setInterval(async()=>{const r=await fetch('/api/scheduler');const c=await r.json();applySchedUI(c);},1000);}
+function stopSchedPoll(){if(schedPoll){clearInterval(schedPoll);schedPoll=null;}}
+async function loadScheduler(){const r=await fetch('/api/scheduler');const c=await r.json();applySchedUI(c);}
+function applySchedUI(cfg){
+  const el=id=>document.getElementById(id);
+  if(el('sched-cd'))el('sched-cd').textContent=cfg.countdown||'--:--:--';
+  if(el('sched-count'))el('sched-count').textContent=cfg.run_count||0;
+  if(el('sched-result'))el('sched-result').textContent=cfg.last_result||'-';
+  if(el('sched-last'))el('sched-last').textContent=cfg.last_run||'-';
+  if(el('sched-next'))el('sched-next').textContent=cfg.next_run||'-';
+  const toggle=el('sched-toggle');const track=document.querySelector('.sw-track');const thumb=document.querySelector('.sw-thumb');
+  if(toggle){toggle.checked=!!cfg.enabled;if(track)track.style.background=cfg.enabled?'var(--ac)':'var(--sf3)';if(thumb)thumb.style.transform=cfg.enabled?'translateX(19px)':'translateX(0)';}
+  const slider=el('interval-slider');if(slider&&cfg.interval_hours){slider.value=cfg.interval_hours;updateIntervalLbl(cfg.interval_hours);}
+  const ks=el('sched-kat');if(ks&&cfg.kategori)ks.value=cfg.kategori;
+}
+function updateIntervalLbl(v){const el=document.getElementById('interval-lbl');if(el)el.textContent=parseInt(v)===24?'1 hari':`${v} jam`;}
+function setPreset(h){const s=document.getElementById('interval-slider');if(s){s.value=h;updateIntervalLbl(h);}saveScheduler();}
+async function saveScheduler(){
+  const toggle=document.getElementById('sched-toggle');
+  const slider=document.getElementById('interval-slider');
+  const ks=document.getElementById('sched-kat');
+  const track=document.querySelector('.sw-track'),thumb=document.querySelector('.sw-thumb');
+  if(track&&thumb){track.style.background=toggle?.checked?'var(--ac)':'var(--sf3)';thumb.style.transform=toggle?.checked?'translateX(19px)':'translateX(0)';}
+  await fetch('/api/scheduler',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:toggle?.checked||false,interval_hours:parseInt(slider?.value||6),kategori:ks?.value||'Semua'})});
+  const ind=document.getElementById('sched-saved');if(ind){ind.style.display='block';setTimeout(()=>ind.style.display='none',2000);}
+}
+async function runNow(){
+  const r=await fetch('/api/scheduler/run-now',{method:'POST'});const d=await r.json();
+  if(!r.ok){alert(d.error||'Gagal');return;}alert('Crawling otomatis akan segera dimulai!');
+}
+
+// ── COLLABORATIVE FILTERING ───────────────────────────────────
+async function loadCFStatus(){
+  try{
+    const r=await fetch('/api/cf/status');if(!r.ok)return;const d=await r.json();
+    const el=id=>document.getElementById(id);
+    if(el('cf-built')){el('cf-built').textContent=d.model_built?'Model Aktif':'Belum Dibangun';el('cf-built').style.color=d.model_built?'var(--gr)':'var(--or)';}
+    if(el('cf-built-at'))el('cf-built-at').textContent=d.last_built?'Terakhir: '+d.last_built.substring(0,16):'-';
+    if(el('cf-n-users'))el('cf-n-users').textContent=d.n_users_indexed||0;
+    if(el('cf-n-items'))el('cf-n-items').textContent=d.n_items_indexed||0;
+    if(el('cf-n-recs'))el('cf-n-recs').textContent=d.n_cached_recs||0;
+    const sbCf=el('sb-cf');if(sbCf)sbCf.textContent=d.model_built?'ON':'OFF';
+    loadCFTopUsers();
+  }catch(e){console.error('loadCFStatus:',e);}
+}
+async function loadCFTopUsers(){
+  try{
+    const r=await fetch('/api/interactions/summary');if(!r.ok)return;const d=await r.json();
+    const tb=document.getElementById('cf-top-users-tb');if(!tb)return;
+    const users=d.top_users||[];
+    if(!users.length){tb.innerHTML='<tr><td colspan="4" style="text-align:center;padding:14px;color:var(--tx3)">Belum ada data.</td></tr>';return;}
+    tb.innerHTML=users.map((u,i)=>`<tr>
+      <td class="td-mono">${i+1}</td>
+      <td class="td-mono" style="color:var(--ac2)">${u.pseudonym}</td>
+      <td class="td-mono">${u.count}</td>
+      <td><button class="btn btn-g btn-sm" onclick="cfTestUserDirect('${u.pseudonym}')">Test</button></td>
+    </tr>`).join('');
+  }catch(e){}
+}
+async function cfBuild(){
+  const btn=document.getElementById('btn-cf-build');const status=document.getElementById('cf-build-status');
+  btn.disabled=true;btn.innerHTML=`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="animation:spin 1s linear infinite"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>Membangun...`;
+  if(status)status.textContent='Sedang membangun model CF...';
+  try{
+    const r=await fetch('/api/cf/build',{method:'POST'});const d=await r.json();
+    if(d.status==='ok'){if(status){status.textContent=`Selesai — ${d.n_users} user, ${d.n_items} item, ${d.recommendations_saved} rekomendasi`;status.style.color='var(--gr)';}}
+    else if(d.status==='empty'){if(status){status.textContent='Belum ada interaksi.';status.style.color='var(--or)';}}
+    else{if(status){status.textContent='Error: '+(d.message||JSON.stringify(d));status.style.color='var(--rd)';}}
+    loadCFStatus();
+  }catch(e){if(status){status.textContent='Error: '+e.message;status.style.color='var(--rd)';}}
+  btn.disabled=false;btn.innerHTML=`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3"/></svg>Build / Rebuild Model`;
+}
+async function cfEvaluate(){
+  const btn=document.querySelector('[onclick="cfEvaluate()"]');
+  if(btn){btn.disabled=true;btn.textContent='Mengevaluasi...';}
+  try{
+    const r=await fetch('/api/cf/evaluate?top_k=10');const d=await r.json();
+    const panel=document.getElementById('cf-eval-result');const metrics=document.getElementById('cf-metrics');
+    if(!panel||!metrics)return;
+    panel.style.display='block';
+    if(d.status==='insufficient_data'||d.status==='empty'){
+      metrics.innerHTML=`<div style="color:var(--or);font-size:13px">Data tidak cukup untuk evaluasi.</div>`;return;
+    }
+    const p10=d['precision@10']??0,r10=d['recall@10']??0,m10=d['map@10']??0;
+    const items=[
+      {label:'Precision@10',val:p10,color:'var(--ac)'},
+      {label:'Recall@10',val:r10,color:'var(--ac2)'},
+      {label:'MAP@10',val:m10,color:'var(--ac4)'}
+    ];
+    metrics.innerHTML=items.map(item=>`
+      <div class="gauge-box">
+        <div class="gauge-label">${item.label}</div>
+        <div class="gauge-val" style="color:${item.color}">${(item.val*100).toFixed(1)}%</div>
+        <div class="gauge-bar-wrap">
+          <div class="gauge-bar-fill" style="width:${Math.round(item.val*100)}%;background:${item.color}"></div>
+        </div>
+        ${item.label==='Precision@10'&&item.val<0.6?'<div style="font-size:10px;color:var(--or);margin-top:6px"></div>':
+          '<div style="font-size:10px;color:var(--gr);margin-top:6px"></div>'}
+      </div>`).join('');
+    if(d.n_users_evaluated){
+      metrics.innerHTML+=`<div style="font-size:11px;color:var(--tx2);margin-top:12px;grid-column:1/-1">Dievaluasi pada <strong style="color:var(--tx)">${d.n_users_evaluated} user</strong> · Top-K=${d.top_k} · Hold-out 20%</div>`;
+    }
+  }catch(e){console.error('cfEvaluate:',e);}
+  if(btn){btn.disabled=false;btn.innerHTML=`<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Evaluasi Offline`;}
+}
+function cfTestUser(){const p=document.getElementById('cf-test-user')?.value.trim();if(!p){alert('Masukkan pseudonym.');return;}cfTestUserDirect(p);}
+async function cfTestUserDirect(pseudo){
+  const inp=document.getElementById('cf-test-user');if(inp)inp.value=pseudo;
+  // Otomatis muat visualisasi log interaksi juga
+  const vizInput=document.getElementById('cf-user-viz-input');
+  if(vizInput){vizInput.value=pseudo;loadUserVisualization();}
+  const res=document.getElementById('cf-test-result');if(!res)return;
+  res.innerHTML='<em style="color:var(--tx2)">Memuat...</em>';
+  try{
+    const r=await fetch(`/api/cf/recommend/${encodeURIComponent(pseudo)}?top_n=8`);
+    const d=await r.json();
+    if(!r.ok){res.innerHTML=`<span style="color:var(--rd)">${d.error||'User tidak ditemukan.'}</span>`;return;}
+    const recs=d.recommendations||[];
+    if(!recs.length){res.innerHTML=`<span style="color:var(--or)">${d.message||'Belum cukup data.'}</span>`;return;}
+    const src=d.source==='cache'?'<span style="color:var(--gr)">cache</span>':'<span style="color:var(--ac2)">realtime</span>';
+    res.innerHTML=`
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">User: <strong style="color:var(--ac2)">${pseudo}</strong> · Sumber: ${src}</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--sf2)">
+          <th style="text-align:left;padding:7px 12px;font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase">No</th>
+          <th style="text-align:left;padding:7px 12px;font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase">Judul</th>
+          <th style="text-align:left;padding:7px 12px;font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase">Sumber</th>
+          <th style="text-align:left;padding:7px 12px;font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase">Kategori</th>
+          <th style="text-align:left;padding:7px 12px;font-size:10px;color:var(--tx3);letter-spacing:1px;text-transform:uppercase">Skor</th>
+        </tr></thead>
+        <tbody>${recs.map((r,i)=>{const[bg,fg]=gp(r.source||'');return`<tr style="border-bottom:1px solid var(--bd)">
+          <td style="padding:8px 12px;font-size:12px;color:var(--tx2)">${i+1}</td>
+          <td style="padding:8px 12px;font-size:12px;max-width:260px"><a href="${r.url}" target="_blank" style="color:var(--tx);text-decoration:none;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden">${r.title}</a></td>
+          <td style="padding:8px 12px"><span class="pill" style="background:${bg};color:${fg}">${r.source||'-'}</span></td>
+          <td style="padding:8px 12px"><span class="pill pill-bl">${r.category||'Umum'}</span></td>
+          <td style="padding:8px 12px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ac)">${(r.score*100).toFixed(1)}%</td>
+        </tr>`;}).join('')}</tbody>
+      </table>`;
+  }catch(e){res.innerHTML=`<span style="color:var(--rd)">Error: ${e.message}</span>`;}
+}
+
+// ── CF PARAMETERS ──────────────────────────────────────────────
+async function loadCFParams(){
+  try{
+    const r=await fetch('/api/cf/params');const p=await r.json();
+    document.getElementById('cf-param-lambda').value=p.lambda_decay;
+    document.getElementById('cf-lbl-lambda').textContent=parseFloat(p.lambda_decay).toFixed(2);
+    document.getElementById('cf-param-click').value=p.click_weight;
+    document.getElementById('cf-lbl-click').textContent=parseFloat(p.click_weight).toFixed(1);
+    document.getElementById('cf-param-read').value=p.read_weight;
+    document.getElementById('cf-lbl-read').textContent=parseFloat(p.read_weight).toFixed(1);
+    document.getElementById('cf-param-share').value=p.share_weight;
+    document.getElementById('cf-lbl-share').textContent=parseFloat(p.share_weight).toFixed(1);
+    document.getElementById('cf-param-minsim').value=p.min_sim;
+    document.getElementById('cf-lbl-minsim').textContent=parseFloat(p.min_sim).toFixed(3);
+  }catch(e){console.error('loadCFParams:',e);}
+}
+async function saveCFParams(){
+  const body={
+    lambda_decay:parseFloat(document.getElementById('cf-param-lambda').value),
+    click_weight:parseFloat(document.getElementById('cf-param-click').value),
+    read_weight:parseFloat(document.getElementById('cf-param-read').value),
+    share_weight:parseFloat(document.getElementById('cf-param-share').value),
+    min_sim:parseFloat(document.getElementById('cf-param-minsim').value),
+  };
+  const status=document.getElementById('cf-params-status');
+  const r=await fetch('/api/cf/params',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  if(r.ok){status.textContent='✓ '+d.message;status.style.color='var(--gr)';}
+  else{status.textContent='Error: '+d.error;status.style.color='var(--rd)';}
+}
+async function resetCFParams(){
+  if(!confirm('Kembalikan parameter ke default?'))return;
+  await fetch('/api/cf/params/reset',{method:'POST'});
+  loadCFParams();
+  const status=document.getElementById('cf-params-status');
+  status.textContent='✓ Parameter dikembalikan ke default';status.style.color='var(--gr)';
+}
+
+// ── VISUALISASI LOG INTERAKSI USER ──────────────────────────────
+async function loadUserVisualization(){
+  const pseudo=document.getElementById('cf-user-viz-input').value.trim();
+  if(!pseudo){alert('Masukkan pseudonym user.');return;}
+  try{
+    const r=await fetch(`/api/interactions/user/${encodeURIComponent(pseudo)}`);
+    const d=await r.json();
+    if(!r.ok){alert(d.error||'User tidak ditemukan.');return;}
+    if(d.total===0){alert('User ini belum punya interaksi.');return;}
+
+    document.getElementById('cf-user-viz-empty').style.display='none';
+    document.getElementById('cf-user-viz-content').style.display='block';
+    document.getElementById('viz-pseudonym').textContent=d.pseudonym;
+    document.getElementById('viz-total').textContent=d.total;
+    document.getElementById('viz-since').textContent=(d.first_interaction||'-').substring(0,10);
+
+    // Chart kategori (doughnut)
+    destroyChart('user-kat');
+    const ctxK=document.getElementById('chart-user-kat');
+    if(ctxK){
+      _charts['user-kat']=new Chart(ctxK,{
+        type:'doughnut',
+        data:{labels:d.per_kategori.map(k=>k.kategori),
+          datasets:[{data:d.per_kategori.map(k=>k.count),backgroundColor:CHART_COLORS.map(c=>c+'cc'),borderColor:CHART_COLORS,borderWidth:1.5}]},
+        options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+          plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:10,padding:6}}}}
+      });
+    }
+
+    // Chart jam aktif (bar)
+    destroyChart('user-jam');
+    const ctxJ=document.getElementById('chart-user-jam');
+    if(ctxJ){
+      _charts['user-jam']=new Chart(ctxJ,{
+        type:'bar',
+        data:{labels:d.per_jam.map(j=>j.jam+':00'),
+          datasets:[{label:'Klik',data:d.per_jam.map(j=>j.count),backgroundColor:'#4a9eff99',borderColor:'#4a9eff',borderWidth:1,borderRadius:3}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+          scales:{x:{grid:{display:false},ticks:{font:{size:8},maxRotation:0}},y:{grid:{color:'#2d374844'}}}}
+      });
+    }
+
+    // Timeline tabel
+    const tb=document.getElementById('viz-timeline-tb');
+    tb.innerHTML=d.timeline.slice().reverse().map(t=>{
+      const[bg,fg]=gp(t.sumber||'');
+      const ec=t.event_type==='click'?'var(--ac)':t.event_type==='read'?'var(--ac2)':'var(--or)';
+      return`<tr>
+        <td class="td-mono" style="font-size:11px">${t.waktu.substring(0,16)}</td>
+        <td style="max-width:240px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.judul}</td>
+        <td><span class="pill" style="background:${bg};color:${fg};font-size:10px">${t.sumber}</span></td>
+        <td><span class="pill pill-bl" style="font-size:10px">${t.kategori}</span></td>
+        <td><span style="font-size:11px;font-weight:700;color:${ec}">${t.event_type}</span></td>
+      </tr>`;}).join('');
+  }catch(e){console.error('loadUserVisualization:',e);alert('Terjadi kesalahan.');}
+}
+
+// ── CF SCHEDULER ──────────────────────────────────────────────
+let cfSchedPoll=null;
+function startCFSchedPoll(){cfSchedPoll=setInterval(async()=>{const r=await fetch('/api/cf/scheduler');const c=await r.json();applyCFSchedUI(c);},1000);}
+function stopCFSchedPoll(){if(cfSchedPoll){clearInterval(cfSchedPoll);cfSchedPoll=null;}}
+async function loadCFScheduler(){const r=await fetch('/api/cf/scheduler');const c=await r.json();applyCFSchedUI(c);}
+function applyCFSchedUI(cfg){
+  const el=id=>document.getElementById(id);
+  if(el('cf-sched-cd'))el('cf-sched-cd').textContent=cfg.countdown||'--:--:--';
+  if(el('cf-sched-count'))el('cf-sched-count').textContent=cfg.run_count||0;
+  if(el('cf-sched-result'))el('cf-sched-result').textContent=cfg.last_result||'-';
+  const toggle=el('cf-sched-toggle');
+  const autoToggle=el('cf-auto-after-crawl');
+  if(toggle){
+    toggle.checked=!!cfg.enabled;
+    const track=toggle.parentElement.querySelector('.sw-track');
+    const thumb=toggle.parentElement.querySelector('.sw-thumb');
+    if(track)track.style.background=cfg.enabled?'var(--ac)':'var(--sf3)';
+    if(thumb)thumb.style.transform=cfg.enabled?'translateX(19px)':'translateX(0)';
+  }
+  if(autoToggle){
+    autoToggle.checked=!!cfg.auto_rebuild_after_crawl;
+    const track=autoToggle.parentElement.querySelector('.sw-track');
+    const thumb=autoToggle.parentElement.querySelector('.sw-thumb');
+    if(track)track.style.background=cfg.auto_rebuild_after_crawl?'var(--ac)':'var(--sf3)';
+    if(thumb)thumb.style.transform=cfg.auto_rebuild_after_crawl?'translateX(19px)':'translateX(0)';
+  }
+  const slider=el('cf-interval-slider');
+  if(slider&&cfg.interval_hours){slider.value=cfg.interval_hours;updateCFIntervalLbl(cfg.interval_hours);}
+}
+function updateCFIntervalLbl(v){const el=document.getElementById('cf-interval-lbl');if(el)el.textContent=parseInt(v)===24?'1 hari':`${v} jam`;}
+async function saveCFScheduler(){
+  const toggle=document.getElementById('cf-sched-toggle');
+  const autoToggle=document.getElementById('cf-auto-after-crawl');
+  const slider=document.getElementById('cf-interval-slider');
+  await fetch('/api/cf/scheduler',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      enabled:toggle?.checked||false,
+      interval_hours:parseInt(slider?.value||6),
+      auto_rebuild_after_crawl:autoToggle?.checked||false
+    })});
+  applyCFSchedUI({enabled:toggle?.checked,interval_hours:parseInt(slider?.value||6)});
+  const ind=document.getElementById('cf-sched-saved');
+  if(ind){ind.style.display='block';setTimeout(()=>ind.style.display='none',2000);}
+}
+async function cfRunSchedNow(){
+  const r=await fetch('/api/cf/scheduler/run-now',{method:'POST'});const d=await r.json();
+  if(!r.ok){alert(d.error||'Gagal');return;}
+  alert('Build CF dijadwalkan segera!');
+  setTimeout(loadCFStatus,3000);
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+function closeModal(id,e){if(!e||e.target===document.getElementById(id))document.getElementById(id).classList.remove('vis');}
+</script>
+</body>
+</html>

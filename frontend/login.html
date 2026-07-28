@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>NewsAgg — Login Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:#080c10;color:#e8edf3;font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+.card{background:#0f1419;border:1px solid #243040;border-radius:16px;padding:40px;width:min(420px,95vw);}
+.logo{font-family:'Instrument Serif',serif;font-size:28px;color:#00d4aa;text-align:center;margin-bottom:6px;}
+.logo sup{font-size:11px;font-family:'DM Sans',sans-serif;color:#8fa0b5;letter-spacing:1px;text-transform:uppercase;vertical-align:super;}
+.subtitle{text-align:center;font-size:13px;color:#8fa0b5;margin-bottom:32px;}
+.field{margin-bottom:16px;}
+.label{font-size:12px;color:#8fa0b5;margin-bottom:5px;display:block;}
+.input{width:100%;background:#161d26;border:1px solid #243040;border-radius:8px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:#e8edf3;outline:none;transition:border-color .2s;}
+.input:focus{border-color:#00d4aa;}
+.input::placeholder{color:#4a5a6e;}
+.btn{width:100%;background:#00d4aa;color:#000;border:none;border-radius:8px;padding:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px;}
+.btn:hover{background:#00bfa0;transform:translateY(-1px);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.error{background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.2);border-radius:8px;padding:10px 14px;font-size:13px;color:#ff4444;margin-top:12px;display:none;}
+.error.vis{display:block;}
+.footer{text-align:center;font-size:11px;color:#4a5a6e;margin-top:24px;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.3);border-top-color:#000;border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">NewsAgg <sup>Admin</sup></div>
+  <div class="subtitle">Masuk ke dashboard admin</div>
+
+  <div class="field">
+    <label class="label">Username</label>
+    <input class="input" id="username" type="text" placeholder="admin"
+           autocomplete="username" onkeydown="if(event.key==='Enter')login()">
+  </div>
+  <div class="field">
+    <label class="label">Password</label>
+    <input class="input" id="password" type="password" placeholder="••••••••"
+           autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+  </div>
+
+  <button class="btn" id="btn-login" onclick="login()">Masuk</button>
+  <div class="error" id="error-msg"></div>
+
+  <div class="footer">NewsAgg Prototipe · Sistem Agregator Berita</div>
+</div>
+
+<script>
+// Auto-focus username
+document.getElementById('username').focus();
+
+async function login(){
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const btn      = document.getElementById('btn-login');
+  const errEl    = document.getElementById('error-msg');
+
+  if(!username || !password){
+    errEl.textContent = 'Username dan password wajib diisi.';
+    errEl.classList.add('vis'); return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Memverifikasi...';
+  errEl.classList.remove('vis');
+
+  try{
+    const r = await fetch('/panel-admin', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({username, password}),
+    });
+    const d = await r.json();
+
+    if(r.ok){
+      btn.innerHTML = '✓ Berhasil, mengalihkan...';
+      window.location.href = '/';
+    } else {
+      errEl.textContent = d.error || 'Login gagal.';
+      errEl.classList.add('vis');
+      btn.disabled = false;
+      btn.textContent = 'Masuk';
+      document.getElementById('password').value = '';
+      document.getElementById('password').focus();
+    }
+  } catch(e){
+    errEl.textContent = 'Tidak dapat terhubung ke server.';
+    errEl.classList.add('vis');
+    btn.disabled = false;
+    btn.textContent = 'Masuk';
+  }
+}
+</script>
+</body>
+</html>
