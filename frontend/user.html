@@ -96,11 +96,11 @@ body{background:var(--bg);color:var(--tx);font-family:'Source Serif 4',serif;min
 </div>
 <div class="layout">
   <div class="left-col">
-    <div class="side-section rec-section" id="rec-section" style="display:none">
+    <div class="side-section rec-section" id="rec-section">
       <div class="rec-badge">✦ Untuk Kamu</div>
       <div class="side-title" style="border-bottom-color:var(--ac);color:var(--ac)">Rekomendasi</div>
       <div id="rec-list"></div>
-      <div id="rec-empty" style="display:none;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx3);padding:10px 0">Baca lebih banyak artikel untuk mendapat rekomendasi personal.</div>
+      <div id="rec-empty" style="font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx3);padding:10px 0">Klik artikel untuk mendapat rekomendasi personal.</div>
     </div>
   </div>
   <div class="main-col">
@@ -288,23 +288,34 @@ function renderPgn(total,totalPages,cur){
 function goPage(p){curPage=p;loadArticles();window.scrollTo({top:0,behavior:'smooth'});}
 
 // ── COLLABORATIVE FILTERING RECOMMENDATIONS ────────────────────
+let _cfBuilt=false;
 async function loadRecommendations(){
   try{
     const r=await fetch(`/api/cf/recommend/${SESSION_KEY}?top_n=8`);
-    if(!r.ok) return;
-    const d=await r.json();
-    const recs=d.recommendations||[];
-    const section=document.getElementById('rec-section');
     const list=document.getElementById('rec-list');
     const empty=document.getElementById('rec-empty');
-    if(!section||!list) return;
-    if(!recs.length){
-      section.style.display='block';
+    if(!list) return;
+    // 404 = user belum ada di DB (belum pernah klik) — tampilkan pesan default, jangan rebuild
+    if(r.status===404){
       list.innerHTML='';
       if(empty) empty.style.display='block';
       return;
     }
-    section.style.display='block';
+    if(!r.ok) return;
+    const d=await r.json();
+    const recs=d.recommendations||[];
+    if(!recs.length){
+      list.innerHTML='';
+      if(empty) empty.style.display='block';
+      // User ada di DB tapi belum ada di model CF → rebuild sekali
+      if(!_cfBuilt){
+        _cfBuilt=true;
+        fetch('/api/cf/build',{method:'POST'})
+          .then(()=>loadRecommendations())
+          .catch(()=>{});
+      }
+      return;
+    }
     if(empty) empty.style.display='none';
     list.innerHTML=recs.map((r,i)=>{
       const[bg,fg]=srcColor(r.source||'');
@@ -322,21 +333,15 @@ async function loadRecommendations(){
   }catch(e){ /* CF tidak wajib tersedia */ }
 }
 
-// Load rekomendasi setelah user mulai berinteraksi
-// Pada klik ke-5: rebuild model CF dulu (memasukkan interaksi user ini), lalu tampilkan
-// Pada klik ke-3 dan setiap 10 klik: coba tampilkan dari cache yang sudah ada
-let _clickCount=0,_cfBuilt=false;
+// Setelah setiap klik artikel: refresh rekomendasi
+// Klik ke-1: user dibuat di DB → loadRecommendations akan trigger rebuild otomatis
+// Setiap 5 klik berikutnya: refresh (rekomendasi mungkin berubah)
+let _clickCount=0;
 const _origOpenArticle=openArticle;
 openArticle=async function(id){
   await _origOpenArticle(id);
   _clickCount++;
-  if(!_cfBuilt&&_clickCount>=5){
-    // Rebuild CF sekali agar interaksi user ini masuk ke model
-    _cfBuilt=true;
-    fetch('/api/cf/build',{method:'POST'})
-      .then(()=>loadRecommendations())
-      .catch(()=>loadRecommendations());
-  }else if(_clickCount===3||_clickCount%10===0){
+  if(_clickCount===1||_clickCount%5===0){
     loadRecommendations();
   }
 };
