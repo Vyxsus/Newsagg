@@ -168,6 +168,16 @@ def user_page():
 
 
 # ────────────────────────────────────────────────────────────────
+# PUBLIC API UNTUK FOOTER
+# ────────────────────────────────────────────────────────────────
+@app.route("/api/portals", methods=["GET"])
+def public_portals():
+    """Daftar nama portal saja — untuk footer halaman user."""
+    cfgs = get_portal_configs()
+    return jsonify([{"name": c["name"], "domain": c["domain"]} for c in cfgs])
+
+
+# ────────────────────────────────────────────────────────────────
 # PORTAL ENDPOINTS (PUBLIC, TAPI DATA PORTAL DARI CONFIG)
 # ────────────────────────────────────────────────────────────────
 @app.route("/admin/portals", methods=["GET"])
