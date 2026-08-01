@@ -107,12 +107,22 @@ body{background:var(--bg);color:var(--tx);font-family:'Source Serif 4',serif;min
 .footer-sources ul{list-style:none;display:flex;flex-direction:column;gap:5px;}
 .footer-sources li{font-size:12px;color:rgba(255,255,255,.5);}
 .footer-sources li::before{content:"·  ";}
+.footer-code-wrap{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:18px 24px;margin:20px 0;display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+.footer-code-left{flex:1;min-width:180px;}
+.footer-code-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ac);margin-bottom:4px;}
+.footer-code-hint{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin-top:6px;}
+.footer-code-display{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.footer-code{font-family:'Courier New',monospace;font-size:30px;font-weight:700;letter-spacing:8px;color:#fff;background:rgba(0,0,0,.35);padding:10px 20px;border-radius:6px;border:1px solid rgba(255,255,255,.2);user-select:all;}
+.footer-code-copy{background:var(--ac);border:none;border-radius:4px;padding:10px 18px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:#fff;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+.footer-code-copy:hover{opacity:.82;}
 .footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:18px;flex-wrap:wrap;gap:8px;}
 .footer-copy{font-size:11px;color:rgba(255,255,255,.35);}
 .footer-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.45);}
 @media(max-width:767px){
   .footer-inner{padding:28px 16px 20px;}
   .footer-top{gap:28px;}
+  .footer-code-wrap{flex-direction:column;align-items:flex-start;gap:14px;}
+  .footer-code{font-size:24px;letter-spacing:6px;padding:8px 14px;}
   .footer-bottom{flex-direction:column;align-items:flex-start;}
 }
 
@@ -240,6 +250,17 @@ body{background:var(--bg);color:var(--tx);font-family:'Source Serif 4',serif;min
         <ul id="footer-portals"><li>Memuat...</li></ul>
       </div>
     </div>
+    <div class="footer-code-wrap">
+      <div class="footer-code-left">
+        <div class="footer-code-label">Kode Partisipasi Kuesioner</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.7);margin-top:2px;">Kode unik Anda sebagai peserta penelitian</div>
+        <div class="footer-code-hint">Masukkan kode ini pada pertanyaan kuesioner UAT.<br>Kode bersifat anonim — bukan identitas pribadi Anda.</div>
+      </div>
+      <div class="footer-code-display">
+        <span id="kode-partisipasi" class="footer-code">——————</span>
+        <button class="footer-code-copy" id="btn-copy-kode" onclick="copyKodePartisipasi()">Salin</button>
+      </div>
+    </div>
     <div class="footer-bottom">
       <span class="footer-copy">© 2026 · Skripsi Teknik Informatika · Fathir Ahmad Nurpadli</span>
       <span class="footer-badge">🎓 Prototipe — Bukan untuk komersial</span>
@@ -263,6 +284,23 @@ let curKat='',curPage=1,searchTimer=null,_readTimer=null;
 // SESSION_KEY disimpan di localStorage agar riwayat klik tetap dikenali antar sesi
 let SESSION_KEY=localStorage.getItem('newsagg_uid');
 if(!SESSION_KEY){SESSION_KEY='newsagg_'+Math.random().toString(36).substr(2,10);localStorage.setItem('newsagg_uid',SESSION_KEY);}
+// Kode partisipasi: 6 karakter dari pseudonym, huruf kapital — anonim tapi unik
+const KODE_PARTISIPASI=SESSION_KEY.replace('newsagg_','').substring(0,6).toUpperCase();
+document.getElementById('kode-partisipasi').textContent=KODE_PARTISIPASI;
+function copyKodePartisipasi(){
+  const btn=document.getElementById('btn-copy-kode');
+  navigator.clipboard.writeText(KODE_PARTISIPASI).then(()=>{
+    btn.textContent='Tersalin ✓';btn.style.background='#27ae60';
+    setTimeout(()=>{btn.textContent='Salin';btn.style.background='';},2500);
+  }).catch(()=>{
+    // fallback: select teks agar user bisa salin manual
+    const el=document.getElementById('kode-partisipasi');
+    const r=document.createRange();r.selectNode(el);
+    window.getSelection().removeAllRanges();window.getSelection().addRange(r);
+    btn.textContent='Blok & salin manual';
+    setTimeout(()=>{btn.textContent='Salin';},3000);
+  });
+}
 const SRC_COLORS=[['#fdecea','#c0392b'],['#e8f4fd','#1a6fc4'],['#eafaf1','#27ae60'],['#fef9e7','#d4ac0d'],['#f4ecf7','#8e44ad'],['#fef5e7','#e67e22'],['#e8f8f5','#1abc9c'],['#fdfefe','#566573'],['#fef9e7','#d35400'],['#eaf2ff','#2980b9']];
 const _sc={};function srcColor(n){if(!_sc[n]){const i=Object.keys(_sc).length%SRC_COLORS.length;_sc[n]=SRC_COLORS[i];}return _sc[n];}
 
