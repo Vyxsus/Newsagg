@@ -490,7 +490,7 @@ def get_interactions():
                .join(Article, Interaction.article_id == Article.id)\
                .order_by(Interaction.created_at.desc())
         if pseudonym:
-            q = q.filter(User.pseudonym == pseudonym)
+            q = q.filter(User.pseudonym.ilike(f"%{pseudonym}%"))
         if event_type:
             q = q.filter(Interaction.event_type == event_type)
         total = q.count()
