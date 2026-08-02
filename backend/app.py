@@ -466,16 +466,23 @@ def log_interaction():
         return jsonify({"error": "pseudonym dan article_id wajib"}), 400
     if event_type not in ("click", "read", "share", "rec_click"):
         event_type = "click"
+    is_new_user = False
     with get_db() as db:
         user = db.query(User).filter_by(pseudonym=pseudonym).first()
         if not user:
             user = User(pseudonym=pseudonym)
             db.add(user)
             db.flush()
+            is_new_user = True
         if not db.query(Article).get(article_id):
             return jsonify({"error": "Artikel tidak ditemukan"}), 404
         db.add(Interaction(user_id=user.id, article_id=article_id, event_type=event_type))
-    return jsonify({"message": "Interaksi dicatat"}), 201
+
+    # Jika user baru, rebuild CF di background agar rekomendasi segera tersedia
+    if is_new_user and not cf_status.get("running"):
+        cf_scheduler.trigger_rebuild_now(reason="new-user")
+
+    return jsonify({"message": "Interaksi dicatat", "new_user": is_new_user}), 201
 
 
 @app.route("/api/interactions", methods=["GET"])

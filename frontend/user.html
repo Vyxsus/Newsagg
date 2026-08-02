@@ -457,14 +457,26 @@ function renderPgn(total,totalPages,cur){
 function goPage(p){curPage=p;loadArticles();window.scrollTo({top:0,behavior:'smooth'});}
 
 // ── COLLABORATIVE FILTERING RECOMMENDATIONS ────────────────────
-let _cfBuilt=false;
+let _recPollTimer=null;
+function _startRecPolling(){
+  // Cek setiap 4 detik, maks 10x (40 detik) — berhenti begitu ada rekomendasi
+  if(_recPollTimer) return;
+  let _tries=0;
+  _recPollTimer=setInterval(async()=>{
+    _tries++;
+    await loadRecommendations();
+    const recs=document.getElementById('rec-list');
+    const hasRecs=recs&&recs.children.length>0;
+    if(hasRecs||_tries>=10){clearInterval(_recPollTimer);_recPollTimer=null;}
+  },4000);
+}
 async function loadRecommendations(){
   try{
     const r=await fetch(`/api/cf/recommend/${SESSION_KEY}?top_n=8`);
     const list=document.getElementById('rec-list');
     const empty=document.getElementById('rec-empty');
     if(!list) return;
-    // 404 = user belum ada di DB (belum pernah klik) — tampilkan pesan default, jangan rebuild
+    // 404 = user belum ada di DB (belum pernah klik) — tampilkan pesan default
     if(r.status===404){
       list.innerHTML='';
       if(empty) empty.style.display='block';
@@ -476,15 +488,12 @@ async function loadRecommendations(){
     if(!recs.length){
       list.innerHTML='';
       if(empty) empty.style.display='block';
-      // User ada di DB tapi belum ada di model CF → rebuild sekali
-      if(!_cfBuilt){
-        _cfBuilt=true;
-        fetch('/api/cf/build',{method:'POST'})
-          .then(()=>loadRecommendations())
-          .catch(()=>{});
-      }
+      // Mulai polling — backend sudah trigger rebuild saat user pertama kali dibuat
+      _startRecPolling();
       return;
     }
+    // Ada rekomendasi — hentikan polling jika masih jalan
+    if(_recPollTimer){clearInterval(_recPollTimer);_recPollTimer=null;}
     if(empty) empty.style.display='none';
     const _maxScore=Math.max(...recs.map(x=>x.score),0.0001);
     list.innerHTML=recs.map((r,i)=>{
@@ -504,17 +513,12 @@ async function loadRecommendations(){
   }catch(e){ /* CF tidak wajib tersedia */ }
 }
 
-// Setelah setiap klik artikel: refresh rekomendasi
-// Klik ke-1: user dibuat di DB → loadRecommendations akan trigger rebuild otomatis
-// Setiap 5 klik berikutnya: refresh (rekomendasi mungkin berubah)
-let _clickCount=0;
+// Setelah klik artikel: refresh rekomendasi
+// Rebuild CF dipicu otomatis dari backend saat user baru pertama kali dibuat
 const _origOpenArticle=openArticle;
-openArticle=async function(id){
-  await _origOpenArticle(id);
-  _clickCount++;
-  if(_clickCount===1||_clickCount%5===0){
-    loadRecommendations();
-  }
+openArticle=async function(id,evType='click'){
+  await _origOpenArticle(id,evType);
+  loadRecommendations();
 };
 
 // Load rekomendasi saat halaman pertama dibuka (jika sudah ada history dari sesi sebelumnya)
