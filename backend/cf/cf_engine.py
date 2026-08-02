@@ -191,6 +191,9 @@ class CollaborativeFilter:
         Skor artikel kandidat = Σ (sim(item_i, item_j) * bobot_user_i)
         di mana item_j adalah artikel yang belum dilihat user,
         item_i adalah artikel yang sudah dilihat user.
+
+        Fallback: jika tidak ada item_sim (semua artikel user baru/belum ada di simulasi),
+        kembalikan artikel terpopuler yang belum dilihat sebagai cold-start recommendation.
         """
         if user_id not in self.user_item:
             return []
@@ -206,10 +209,24 @@ class CollaborativeFilter:
                     continue
                 scores[candidate_item] += sim * user_weight
 
+        # Fallback cold-start: artikel yang diklik user belum ada di item_sim
+        # (terjadi saat user klik artikel baru yang tidak ada di data simulasi)
+        if not scores:
+            popularity = sorted(
+                self.item_users.items(),
+                key=lambda x: sum(x[1].values()),
+                reverse=True,
+            )
+            for aid, _ in popularity:
+                if exclude_seen and aid in seen:
+                    continue
+                scores[aid] = 0.01  # skor minimal — bukan berbasis similarity
+                if len(scores) >= top_n:
+                    break
+
         if not scores:
             return []
 
-        # Urutkan berdasarkan skor tertinggi
         ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:top_n]
         return [{"article_id": aid, "score": round(score, 4)} for aid, score in ranked]
 

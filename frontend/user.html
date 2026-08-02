@@ -510,7 +510,7 @@ async function loadRecommendations(){
         </div>
         <div class="rec-score">⭐${pct}%</div>
       </div>`;}).join('');
-  }catch(e){ /* CF tidak wajib tersedia */ }
+  }catch(e){console.error('[CF]',e);}
 }
 
 // Setelah klik artikel: refresh rekomendasi
