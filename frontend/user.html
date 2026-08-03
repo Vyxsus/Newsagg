@@ -63,19 +63,10 @@ body{background:var(--bg);color:var(--tx);font-family:'Source Serif 4',serif;min
 .pgn-btn.active{background:var(--tx);border-color:var(--tx);color:#fff;font-weight:700;}
 .pgn-btn:disabled{opacity:.3;cursor:not-allowed;}
 
-/* ── Modal ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(26,23,20,.6);z-index:200;align-items:flex-start;justify-content:center;overflow-y:auto;padding:40px 20px;backdrop-filter:blur(2px);}
-.overlay.vis{display:flex;}
-.art-modal{background:var(--sf);max-width:720px;width:100%;border-radius:4px;padding:40px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.15);margin:auto;}
-.modal-close{position:absolute;top:14px;right:14px;background:var(--sf2);border:1px solid var(--bd);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:var(--tx2);}
-.modal-close:hover{color:var(--tx);}
-.modal-kicker{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ac);margin-bottom:8px;}
-.modal-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;line-height:1.3;margin-bottom:12px;}
-.modal-meta{display:flex;gap:8px;align-items:center;padding-bottom:14px;border-bottom:1px solid var(--bd);margin-bottom:16px;flex-wrap:wrap;}
-.modal-excerpt{font-size:14px;color:var(--tx2);font-style:italic;line-height:1.7;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--bd);}
-.modal-body{font-size:14px;line-height:1.85;color:var(--tx);max-height:460px;overflow-y:auto;}
-.modal-body p{margin-bottom:1em;}.modal-body p:last-child{margin-bottom:0;}
-.modal-link{display:inline-flex;align-items:center;gap:5px;margin-top:18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:var(--ac2);text-decoration:none;border-bottom:1px solid var(--ac2);padding-bottom:2px;}
+/* Artikel card — kursor tangan & transisi hover untuk indikasi bisa diklik */
+.art-card{cursor:pointer;}
+.art-card:hover .art-title{color:var(--ac2);}
+.art-ext-icon{font-size:10px;color:var(--tx3);margin-left:4px;vertical-align:middle;}
 .empty{text-align:center;padding:50px 20px;color:var(--tx2);font-family:'DM Sans',sans-serif;}
 
 /* ── Rekomendasi (Untuk Kamu) ── */
@@ -267,20 +258,9 @@ body{background:var(--bg);color:var(--tx);font-family:'Source Serif 4',serif;min
     </div>
   </div>
 </footer>
-<div class="overlay" id="overlay" onclick="closeOverlay(event)">
-  <div class="art-modal">
-    <div class="modal-close" onclick="closeOverlay()">✕</div>
-    <img id="m-image" class="art-thumb-modal" src="" alt="" style="display:none">
-    <div class="modal-kicker" id="m-kat"></div>
-    <div class="modal-title" id="m-title"></div>
-    <div class="modal-meta" id="m-meta"></div>
-    <div class="modal-excerpt" id="m-excerpt"></div>
-    <div class="modal-body" id="m-body"></div>
-    <a class="modal-link" id="m-link" href="#" target="_blank" rel="noopener">Baca artikel lengkap di portal asli →</a>
-  </div>
-</div>
 <script>
-let curKat='',curPage=1,searchTimer=null,_readTimer=null;
+let curKat='',curPage=1,searchTimer=null;
+const _urlMap={};
 // SESSION_KEY disimpan di localStorage agar riwayat klik tetap dikenali antar sesi
 let SESSION_KEY=localStorage.getItem('newsagg_uid');
 if(!SESSION_KEY){SESSION_KEY='newsagg_'+Math.random().toString(36).substr(2,10);localStorage.setItem('newsagg_uid',SESSION_KEY);}
@@ -336,6 +316,7 @@ async function loadArticles(){
 function renderArticles(arts){
   const el=document.getElementById('art-list');
   if(!arts.length){el.innerHTML='<div class="empty">Tidak ada berita yang sesuai.</div>';return;}
+  arts.forEach(a=>{if(a.url) _urlMap[a.id]=a.url;});
   el.innerHTML=arts.map((a,i)=>{
     const[bg,fg]=srcColor(a.source||'');
     const feat=i===0&&curPage===1&&!document.getElementById('search').value;
@@ -349,7 +330,7 @@ function renderArticles(arts){
       ${!feat && a.image_url ? `<img class="art-thumb" src="${a.image_url}" onerror="this.style.display='none'" loading="lazy" alt="">` : ''}
       <div class="art-body">
         <div class="art-kicker">${a.category||'Umum'}</div>
-        <div class="art-title">${a.title}</div>
+        <div class="art-title">${a.title} <span class="art-ext-icon">↗</span></div>
         ${a.excerpt?`<div class="art-excerpt">${a.excerpt}</div>`:''}
         <div class="art-meta">
           <span class="src-pill" style="background:${bg};color:${fg}">${a.source||''}</span>
@@ -370,6 +351,7 @@ function fmtDate(dt){
 async function loadSidebar(){
   const r=await fetch('/api/articles?page=1&per_page=10&user_only=1');
   const d=await r.json();const arts=d.data||[];
+  arts.forEach(a=>{if(a.url) _urlMap[a.id]=a.url;});
   const renderSide=(list,id)=>{
     document.getElementById(id).innerHTML=list.slice(0,5).map((a,i)=>`
       <div class="side-art" onclick="openArticle(${a.id})">
@@ -382,64 +364,22 @@ async function loadSidebar(){
   renderSide([...arts].sort(()=>Math.random()-.5),'side-popular');
 }
 
-async function openArticle(id,evType='click'){
+function openArticle(id,evType='click'){
   // Catat klik ke interaction log (implicit feedback untuk CF)
-  // evType: 'click' = dari daftar utama, 'rec_click' = dari panel "Untuk Kamu"
   fetch('/api/interactions',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({pseudonym:SESSION_KEY,article_id:id,event_type:evType})
   }).catch(()=>{});
-
-  const r=await fetch(`/api/articles/${id}`);const a=await r.json();
-  const[bg,fg]=srcColor(a.source||'');
-  
-  // Gambar di modal
-  const modalImg = document.getElementById('m-image');
-  if(modalImg){
-    if(a.image_url){
-      modalImg.src = a.image_url;
-      modalImg.style.display = 'block';
-      modalImg.onerror = ()=>{ modalImg.style.display='none'; };
-    } else {
-      modalImg.style.display = 'none';
-    }
-  }
-  
-  document.getElementById('m-kat').textContent=a.category||'Umum';
-  document.getElementById('m-title').textContent=a.title;
-  document.getElementById('m-excerpt').textContent=a.excerpt||'';
-  const _bodyRaw=a.body||'';
-  if(_bodyRaw){
-    // Split paragraf berdasarkan \n\n (artikel baru) atau tampilkan sebagai satu blok (artikel lama)
-    const _paras=_bodyRaw.split(/\n{2,}/).map(p=>p.trim()).filter(Boolean);
-    const _bodyEl=document.getElementById('m-body');
-    _bodyEl.innerHTML=_paras.map(p=>{const d=document.createElement('div');d.textContent=p;return`<p>${d.innerHTML}</p>`;}).join('');
-  }else{
-    document.getElementById('m-body').innerHTML='<p style="color:var(--tx2);font-style:italic">Isi berita tidak tersedia. Klik link di bawah untuk membaca di portal asli.</p>';
-  }
-  document.getElementById('m-link').href=a.url;
-  document.getElementById('m-meta').innerHTML=`
-    <span class="src-pill" style="background:${bg};color:${fg}">${a.source||''}</span>
-    <span style="font-family:'DM Sans',sans-serif;font-size:12px;color:var(--tx2)">${a.published_at||fmtDate(a.parsed_at)}</span>`;
-  document.getElementById('overlay').classList.add('vis');
-  document.body.style.overflow='hidden';
-
-  // Catat event "read" hanya jika modal masih terbuka setelah 10 detik
-  if(_readTimer) clearTimeout(_readTimer);
-  _readTimer=setTimeout(()=>{
-    _readTimer=null;
-    fetch('/api/interactions',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({pseudonym:SESSION_KEY,article_id:id,event_type:'read'})
+  // Buka artikel di tab baru menggunakan URL yang sudah di-cache
+  const url=_urlMap[id];
+  if(url){
+    window.open(url,'_blank','noopener,noreferrer');
+  } else {
+    // Fallback: fetch URL jika belum ada di cache (mis. dari rec-card yang tidak lewat renderArticles)
+    fetch(`/api/articles/${id}`).then(r=>r.json()).then(a=>{
+      if(a.url) window.open(a.url,'_blank','noopener,noreferrer');
     }).catch(()=>{});
-  },10000);
-}
-
-function closeOverlay(e){
-  if(!e||e.target===document.getElementById('overlay')){
-    // Batalkan timer "read" jika user menutup modal sebelum 10 detik
-    if(_readTimer){clearTimeout(_readTimer);_readTimer=null;}
-    document.getElementById('overlay').classList.remove('vis');
-    document.body.style.overflow='';
   }
+  loadRecommendations();
 }
 
 function renderPgn(total,totalPages,cur){
@@ -496,13 +436,14 @@ async function loadRecommendations(){
     if(_recPollTimer){clearInterval(_recPollTimer);_recPollTimer=null;}
     if(empty) empty.style.display='none';
     const _maxScore=Math.max(...recs.map(x=>x.score),0.0001);
+    recs.forEach(r=>{if(r.url) _urlMap[r.article_id]=r.url;});
     list.innerHTML=recs.map((r,i)=>{
       const[bg,fg]=srcColor(r.source||'');
       const pct=Math.round(r.score/_maxScore*100);
       return`<div class="rec-card" onclick="openArticle(${r.article_id},'rec_click')">
         <div class="rec-num">${String(i+1).padStart(2,'0')}</div>
         <div style="flex:1;min-width:0">
-          <div class="rec-title">${r.title||'-'}</div>
+          <div class="rec-title">${r.title||'-'} <span class="art-ext-icon">↗</span></div>
           <div class="rec-meta">
             <span class="src-pill" style="background:${bg};color:${fg}">${r.source||''}</span>
             · ${r.category||'Umum'}
@@ -512,14 +453,6 @@ async function loadRecommendations(){
       </div>`;}).join('');
   }catch(e){console.error('[CF]',e);}
 }
-
-// Setelah klik artikel: refresh rekomendasi
-// Rebuild CF dipicu otomatis dari backend saat user baru pertama kali dibuat
-const _origOpenArticle=openArticle;
-openArticle=async function(id,evType='click'){
-  await _origOpenArticle(id,evType);
-  loadRecommendations();
-};
 
 // Load rekomendasi saat halaman pertama dibuka (jika sudah ada history dari sesi sebelumnya)
 setTimeout(loadRecommendations, 2000);
