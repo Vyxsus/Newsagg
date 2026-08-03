@@ -710,7 +710,7 @@ def cf_evaluate():
 
 
 @app.route("/api/cf/status", methods=["GET"])
-def cf_status():
+def get_cf_status():
     cf = get_cf_model()
     with get_db() as db:
         n_recs = db.query(CFRecommendation).count()
