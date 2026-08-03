@@ -594,12 +594,14 @@ def cf_build():
 @app.route("/api/cf/recommend/<pseudonym>", methods=["GET"])
 def cf_recommend(pseudonym):
     top_n = int(request.args.get("top_n", 10))
+    user_id = None
     with get_db() as db:
         user = db.query(User).filter_by(pseudonym=pseudonym).first()
         if not user:
             return jsonify({"error": "User tidak ditemukan", "pseudonym": pseudonym}), 404
+        user_id = user.id  # simpan sebelum session ditutup
 
-        cached = db.query(CFRecommendation).filter_by(user_id=user.id).first()
+        cached = db.query(CFRecommendation).filter_by(user_id=user_id).first()
         if cached:
             import json as _json
             article_ids = _json.loads(cached.article_ids)[:top_n]
@@ -622,7 +624,7 @@ def cf_recommend(pseudonym):
                     })
             return jsonify({
                 "pseudonym": pseudonym,
-                "user_id": user.id,
+                "user_id": user_id,
                 "source": "cache",
                 "computed_at": str(cached.computed_at),
                 "recommendations": recs,
@@ -634,7 +636,7 @@ def cf_recommend(pseudonym):
         if result.get("status") != "ok":
             return jsonify({"error": "Model CF belum siap", "detail": result}), 503
 
-    recs_raw = cf.recommend(user.id, top_n=top_n)
+    recs_raw = cf.recommend(user_id, top_n=top_n)
     if not recs_raw:
         return jsonify({"pseudonym": pseudonym, "recommendations": [], "message": "Belum cukup data interaksi"})
 
@@ -659,7 +661,7 @@ def cf_recommend(pseudonym):
 
     return jsonify({
         "pseudonym": pseudonym,
-        "user_id": user.id,
+        "user_id": user_id,
         "source": "realtime",
         "recommendations": recs,
     })
